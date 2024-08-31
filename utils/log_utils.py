@@ -35,6 +35,18 @@ _ch.setFormatter(DEFAULT_FORMATTER)
 _DEFAULT_HANDLERS = [_ch]
 _LOGGER_CACHE = {}  # type: typing.Dict[str, logging.Logger]
 
+class StreamToLogger:
+    def __init__(self, logger, level=logging.INFO):
+        self.logger = logger
+        self.level = level
+
+    def write(self, message):
+        if message.strip():  # Prevent logging empty messages
+            self.logger.log(self.level, message.strip())
+
+    def flush(self):
+        pass
+
 def get_logger(name, level="INFO", handlers=None, update=False, log_dir=None):
     if not log_dir:
         # Get the current file's path
@@ -73,6 +85,19 @@ def get_logger(name, level="INFO", handlers=None, update=False, log_dir=None):
 
     # Now, use your custom logger to log messages from your transformers operations
     logger.info("Custom logging is set up for the Transformers library.")
+
+    # Redirect stdout and stderr to the logger
+    sys.stdout = StreamToLogger(logger, level=logging.INFO)
+
+    # Handle unhandled exceptions
+    def exception_handler(exc_type, exc_value, exc_traceback):
+        if issubclass(exc_type, KeyboardInterrupt):
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
+            return
+        logger.error("Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback))
+
+    sys.excepthook = exception_handler
+
     return logger
 
 # -------------------------- Singleton Object --------------------------
