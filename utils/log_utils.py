@@ -1,13 +1,12 @@
 import logging
+from pathlib import Path
 import os
 import sys
-import typing
-
-import yaml
+from datetime import datetime
+from transformers import logging as transformers_logging
 
 # -------- log setting ---------
 DEFAULT_LOGGER = "easyllm.logger"
-
 
 class CustomFormatter(logging.Formatter):
     grey = "\x1b[38;20m"
@@ -17,7 +16,6 @@ class CustomFormatter(logging.Formatter):
     reset = "\x1b[0m"
     format = '%(asctime)s - %(filename)s[pid:%(process)d;line:%(lineno)d:%(funcName)s]' \
              ' - %(levelname)s: %(message)s'
-
     FORMATS = {
         logging.DEBUG: grey + format + reset,
         logging.INFO: grey + format + reset,
@@ -31,68 +29,51 @@ class CustomFormatter(logging.Formatter):
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
 
-
 DEFAULT_FORMATTER = CustomFormatter()
-
 _ch = logging.StreamHandler(stream=sys.stdout)
 _ch.setFormatter(DEFAULT_FORMATTER)
-
 _DEFAULT_HANDLERS = [_ch]
-
 _LOGGER_CACHE = {}  # type: typing.Dict[str, logging.Logger]
 
+def get_logger(name, level="INFO", handlers=None, update=False, log_dir=None):
+    if not log_dir:
+        # Get the current file's path
+        current_file_path = Path(__file__)
+        
+        # Create a directory for logs if it doesn't exist
+        log_dir = os.path.join(current_file_path.parent, 'logs')
+        os.makedirs(log_dir, exist_ok=True)
 
-def get_logger(name, level="INFO", handlers=None, update=False):
     if name in _LOGGER_CACHE and not update:
         return _LOGGER_CACHE[name]
+
     logger = logging.getLogger(name)
     logger.setLevel(level)
-    logger.handlers = handlers or _DEFAULT_HANDLERS
+
+    # Create a file handler that saves to "{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    log_file_name = datetime.now().strftime('%Y%m%d_%H%M%S') + '.log'
+    file_handler = logging.FileHandler(os.path.join(log_dir, log_file_name))
+    file_handler.setFormatter(DEFAULT_FORMATTER)
+
+    # Clear existing handlers and set new handlers
+    logger.handlers = []
+    logger.addHandler(file_handler)
+    logger.addHandler(_ch)  # Keep the console handler
+
     logger.propagate = False
+    _LOGGER_CACHE[name] = logger  # Cache the logger for future use
+
+    transformers_logger = transformers_logging.get_logger()
+    transformers_logger.handlers = []
+    
+    # Set up the file handler for transformers logger
+    transformers_logger.addHandler(_DEFAULT_HANDLERS[0])  # Adding console handler
+    transformers_logger.addHandler(file_handler)  # Adding file handler
+    transformers_logger.setLevel(logging.DEBUG)
+
+    # Now, use your custom logger to log messages from your transformers operations
+    logger.info("Custom logging is set up for the Transformers library.")
     return logger
-
-
-def save_yaml_config(save_dir, config):
-    """A function that saves a dict of config to yaml format file.
-
-    Args:
-        save_dir (str): the path to save config file.
-        config (dict): the target config object.
-    """
-    prt_dir = os.path.dirname(save_dir)
-
-    from collections import OrderedDict
-    # add yaml representer for different type
-    yaml.add_representer(
-        OrderedDict,
-        lambda dumper, data: dumper.represent_mapping('tag:yaml.org,2002:map', data.items())
-    )
-
-    if prt_dir != '' and not os.path.exists(prt_dir):
-        os.makedirs(prt_dir)
-
-    with open(save_dir, 'w') as f:
-        yaml.dump(config, stream=f, default_flow_style=False, sort_keys=False)
-
-    return
-
-
-def load_yaml_config(config_dir):
-    """ Load yaml config file from disk.
-
-    Args:
-        config_dir: str or Path
-            The path of the config file.
-
-    Returns:
-        Config: dict.
-    """
-    with open(config_dir) as config_file:
-        # load configs
-        config = yaml.load(config_file, Loader=yaml.FullLoader)
-
-    return config
-
 
 # -------------------------- Singleton Object --------------------------
 default_logger = get_logger(DEFAULT_LOGGER)
