@@ -1,0 +1,4 @@
+pytorch
+transformers
+omegaconf
+registrable
