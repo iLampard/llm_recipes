@@ -1,9 +1,11 @@
 from transformers import Trainer
 
+
 # Debugging: Print the evaluation metrics after training
 def print_evaluation_metrics(trainer: Trainer):
     eval_result = trainer.evaluate()
     print("Evaluation Metrics:", eval_result)
+
 
 def print_trainable_parameters(model):
     """
@@ -18,4 +20,3 @@ def print_trainable_parameters(model):
     print(
         f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param}"
     )
-

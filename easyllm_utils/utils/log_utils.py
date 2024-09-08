@@ -8,6 +8,7 @@ from transformers import logging as transformers_logging
 # -------- log setting ---------
 DEFAULT_LOGGER = "easyllm.logger"
 
+
 class CustomFormatter(logging.Formatter):
     grey = "\x1b[38;20m"
     yellow = "\x1b[33;20m"
@@ -29,11 +30,13 @@ class CustomFormatter(logging.Formatter):
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
 
+
 DEFAULT_FORMATTER = CustomFormatter()
 _ch = logging.StreamHandler(stream=sys.stdout)
 _ch.setFormatter(DEFAULT_FORMATTER)
 _DEFAULT_HANDLERS = [_ch]
 _LOGGER_CACHE = {}  # type: typing.Dict[str, logging.Logger]
+
 
 class StreamToLogger:
     def __init__(self, logger, level=logging.INFO):
@@ -47,11 +50,12 @@ class StreamToLogger:
     def flush(self):
         pass
 
+
 def get_logger(name, level="INFO", handlers=None, update=False, log_dir=None):
     if not log_dir:
         # Get the current file's path
         current_file_path = Path(__file__)
-        
+
         # Create a directory for logs if it doesn't exist
         log_dir = os.path.join(current_file_path.parent, 'logs')
         os.makedirs(log_dir, exist_ok=True)
@@ -77,7 +81,7 @@ def get_logger(name, level="INFO", handlers=None, update=False, log_dir=None):
 
     transformers_logger = transformers_logging.get_logger()
     transformers_logger.handlers = []
-    
+
     # Set up the file handler for transformers logger
     transformers_logger.addHandler(_DEFAULT_HANDLERS[0])  # Adding console handler
     transformers_logger.addHandler(file_handler)  # Adding file handler
@@ -99,6 +103,7 @@ def get_logger(name, level="INFO", handlers=None, update=False, log_dir=None):
     sys.excepthook = exception_handler
 
     return logger
+
 
 # -------------------------- Singleton Object --------------------------
 default_logger = get_logger(DEFAULT_LOGGER)
