@@ -49,6 +49,7 @@ setup(
     version=get_version(),
     description='An easy recipes of code for large language model',
     url = 'https://github.com/iLampard/llm_recipes',
+    long_description = 'A collection of useful recipes for large language model, such as logging, inspection utilities',
     author='iLampard',
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     include_package_data=True,
