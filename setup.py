@@ -45,7 +45,7 @@ def parse_requirements(fname='requirements.txt'):
 
 
 setup(
-    name='llm_recipes',
+    name='easyllm_utils',
     version=get_version(),
     description='An easy recipes of code for large language model',
     url = 'https://github.com/iLampard/llm_recipes',
