@@ -4,9 +4,10 @@ import os
 import sys
 from datetime import datetime
 from transformers import logging as transformers_logging
+import torch.distributed as dist
 
 # -------- log setting ---------
-DEFAULT_LOGGER = "easyllm.logger"
+DEFAULT_LOGGER = "llmkit.logger"
 
 
 class CustomFormatter(logging.Formatter):
@@ -51,7 +52,12 @@ class StreamToLogger:
         pass
 
 
-def get_logger(name, level="INFO", handlers=None, update=False, log_dir=None):
+def get_logger(name, level="INFO", update=False, log_dir=None):
+    # Check if we're in a distributed environment and not the main process
+    if dist.is_initialized() and dist.get_rank() != 0:
+        # For non-main processes, return a logger that doesn't do anything
+        return logging.getLogger('dummy')
+
     if not log_dir:
         # Get the current file's path
         current_file_path = Path(__file__)

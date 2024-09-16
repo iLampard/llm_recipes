@@ -41,7 +41,7 @@ class Config(Registrable):
             yaml_fn (str): Path of the yaml config file.
 
         Returns:
-            EasyTPP.Config: Config object corresponding to cls.
+            Config: Config object corresponding to cls.
         """
         config = OmegaConf.load(yaml_dir)
         config_name = config.get('config_name')
