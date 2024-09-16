@@ -24,7 +24,6 @@ def print_trainable_parameters(model):
 
 def print_trainable_layers(model):
     # print trainable parameters for inspection
-    message = "Trainable parameters:"
     message = "Trainable layers:\n"
     for name, param in model.named_parameters():
         if param.requires_grad:
