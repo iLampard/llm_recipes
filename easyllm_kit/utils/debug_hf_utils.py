@@ -1,5 +1,5 @@
 from transformers import Trainer
-from llmkit.utils.log_utils import default_logger as logger
+from easyllm_kit.utils.log_utils import default_logger as logger
 
 
 # Debugging: Print the evaluation metrics after training

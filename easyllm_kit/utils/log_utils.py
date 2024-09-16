@@ -7,7 +7,7 @@ from transformers import logging as transformers_logging
 import torch.distributed as dist
 
 # -------- log setting ---------
-DEFAULT_LOGGER = "llmkit.logger"
+DEFAULT_LOGGER = "easyllm_kit.logger"
 
 
 class CustomFormatter(logging.Formatter):
