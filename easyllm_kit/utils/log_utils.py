@@ -52,7 +52,7 @@ class StreamToLogger:
         pass
 
 
-def get_logger(name, level="INFO", update=False, log_dir=None):
+def get_logger(name=DEFAULT_LOGGER, level="INFO", update=False, log_dir=None):
     # Check if we're in a distributed environment and not the main process
     if dist.is_initialized() and dist.get_rank() != 0:
         # For non-main processes, return a logger that doesn't do anything
@@ -109,7 +109,3 @@ def get_logger(name, level="INFO", update=False, log_dir=None):
     sys.excepthook = exception_handler
 
     return logger
-
-
-# -------------------------- Singleton Object --------------------------
-default_logger = get_logger(DEFAULT_LOGGER)

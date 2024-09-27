@@ -1,4 +1,4 @@
-from easyllm_kit.utils.log_utils import default_logger
+from easyllm_kit.utils.log_utils import get_logger
 from easyllm_kit.utils.config_utils import TrainConfig
 from easyllm_kit.utils.debug_hf_utils import (
     print_trainable_parameters,
@@ -12,7 +12,7 @@ from easyllm_kit.utils.data_utils import (
 )
 
 __all__ = [
-    'default_logger',
+    'get_logger',
     'TrainConfig',
     'print_trainable_parameters',
     'print_evaluation_metrics',

@@ -1,8 +1,6 @@
-from transformers import Trainer
-
 
 # Debugging: Print the evaluation metrics after training
-def print_evaluation_metrics(trainer: Trainer):
+def print_evaluation_metrics(trainer):
     eval_result = trainer.evaluate()
     message = f"Evaluation Metrics: {eval_result}"
     return message
