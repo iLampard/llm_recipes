@@ -4,8 +4,6 @@ from datetime import datetime
 from omegaconf import OmegaConf
 from registrable import Registrable
 
-from .log_utils import default_logger as logger
-
 
 def format_value(value):
     if isinstance(value, bool):
@@ -56,9 +54,6 @@ class TrainConfig(Config):
     def parse_from_yaml_config(config, **kwargs):
         experiment_name = kwargs.get('experiment_name')
         experiment_config = config.get(experiment_name, None)
-
-        if experiment_config is None:
-            logger.warning(f'Fail to find out experiment {experiment_name} in the config.')
 
         # setup the base config
         merged_experiment_config = config['defaults'].copy()
