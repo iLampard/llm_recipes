@@ -50,24 +50,46 @@ def convert_to_json_list(dataset):
 
 def download_data_from_hf(
     hf_dir: str,
-    subset_name: Union[str, List[str]],
-    split: Union[str, List[str]],
-    save_dir: str
+    subset_name: Union[str, List[str], None] = None,
+    split: Union[str, List[str], None] = None,
+    save_dir: str = "./data"
 ) -> None:
     """
     Download from huggingface repo and convert all data files into json files
     """
-    subsets = [subset_name] if isinstance(subset_name, str) else subset_name
-    splits = [split] if isinstance(split, str) else split
+    if subset_name is None:
+        subsets = [None]
+    elif isinstance(subset_name, str):
+        subsets = [subset_name]
+    else:
+        subsets = subset_name
+
+    if split is None:
+        splits = [None]
+    elif isinstance(split, str):
+        splits = [split]
+    else:
+        splits = split
 
     for subset in subsets:
-        dataset = load_dataset(hf_dir, subset)
+        # Load the dataset
+        if subset is None:
+            dataset = load_dataset(hf_dir, split=split)
+            subset = "main"  # Use "main" as the folder name when there's no subset
+        else:
+            dataset = load_dataset(hf_dir, subset, split=split)
 
         for split_name in splits:
-            json_list = convert_to_json_list(dataset[split_name])
+            if split is None:
+                split_data = dataset[split_name]
+            else:
+                split_data = dataset
 
-            split_path = os.path.join(save_dir, subset, f"{split_name}.json")
+            json_list = convert_to_json_list(split_data)
+
+            split_path = os.path.join(save_dir, subset, f"{subset}_{split_name}.json" if subset else f"{split_name}.json")
             os.makedirs(os.path.dirname(split_path), exist_ok=True)
 
             save_json(split_path, json_list)
             print(f"Saved {split_name} split of {subset} subset to {split_path}")
+
