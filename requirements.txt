@@ -2,3 +2,6 @@ torch
 transformers
 omegaconf
 registrable
+huggingface_hub
+datasets
+pyyaml

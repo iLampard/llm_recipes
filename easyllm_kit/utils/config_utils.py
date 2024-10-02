@@ -42,9 +42,9 @@ class Config(Registrable):
             Config: Config object corresponding to cls.
         """
         config = OmegaConf.load(yaml_dir)
-        config_name = config.get('config_name')
-        config_cls = Config.by_name(config_name.lower())
-        logger.critical(f'Load config class {config_cls.__name__}')
+        assert config.get('config_cls_name', None) is not None, "config_cls_name is not set"
+        config_cls_name = config.get('config_cls_name')
+        config_cls = Config.by_name(config_cls_name.lower())
         return config_cls.parse_from_yaml_config(config, **kwargs)
 
 
@@ -64,8 +64,7 @@ class TrainConfig(Config):
 
         output_dir = merged_experiment_config.get('output_dir', '')
         merged_experiment_config['output_dir'] = generate_output_dir(output_dir,
-                                                                     experiment_name,
-                                                                     **experiment_config)
+                                                                     experiment_name, **experiment_config)
 
         return merged_experiment_config
 
@@ -79,3 +78,17 @@ class TrainConfig(Config):
         param_str = ' '.join(params)
 
         return param_str
+
+
+@Config.register('hf_config')
+class HFConfig(Config):
+    @staticmethod
+    def parse_from_yaml_config(config: dict, **kwargs):
+        assert config.get('hf_token', None) is not None, "HF_TOKEN is not set"
+        return config
+
+@Config.register('llm_config')
+class LLMConfig(Config):
+    @staticmethod
+    def parse_from_yaml_config(config: dict, **kwargs):
+        return config
