@@ -1,0 +1,6 @@
+config_cls_name: llm_config
+
+model:
+  model_name: gpt4o
+  token: xx
+
