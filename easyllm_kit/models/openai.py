@@ -11,6 +11,8 @@ class GPT4o(LLM):
     def generate(self, prompt: str, **kwargs):
         completion = self.client.chat.completions.create(
             model="gpt-4o",
+            max_tokens=self.config.max_tokens,
+            temperature=self.config.temperature,
             messages=[
                 {"role": "user", "content": prompt}
             ]
