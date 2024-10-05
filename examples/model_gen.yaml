@@ -1,4 +1,5 @@
 config_cls_name: llm_config
+task: llm_gen # currently not used
 
 model:
   model_name: gpt4o
