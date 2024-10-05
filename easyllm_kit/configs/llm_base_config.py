@@ -25,16 +25,18 @@ class LLMBaseArgs:
 class LLMConfig(Config):
     @staticmethod
     def parse_from_yaml_config(config: dict, **kwargs):
+        model_config = config['model']
+        
         # Extract known fields from the config
         known_fields = [
             'model_name', 'use_api', 'api_key', 'api_url', 'device',
             'max_tokens', 'temperature', 'top_p', 'repetition_penalty',
             'stop_sequences'
         ]
-        base_args = {k: config.get(k) for k in known_fields if k in config}
+        base_args = {k: model_config.get(k) for k in known_fields if k in model_config}
 
         # Any remaining fields go into extra_params
-        extra_params = {k: v for k, v in config.items() if k not in known_fields}
+        extra_params = {k: v for k, v in model_config.items() if k not in known_fields}
         if extra_params:
             base_args['extra_params'] = extra_params
 
