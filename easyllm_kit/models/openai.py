@@ -1,15 +1,18 @@
 from easyllm_kit.models.base import LLM
-import openai
-
 
 @LLM.register('gpt4o')
 class GPT4o(LLM):
     model_name = 'gpt4o'
+    def __init__(self, config):
+        import openai
+        self.client = openai.OpenAI(api_key=config.api_key)
+        self.config = config
 
     def generate(self, prompt: str, **kwargs):
-        response = openai.Completion.create(
-            engine=self.model_name,
-            prompt=prompt,
-            **kwargs
+        completion = self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
         )
-        return response.choices[0].text.strip()
+        return completion.choices[0].message.content

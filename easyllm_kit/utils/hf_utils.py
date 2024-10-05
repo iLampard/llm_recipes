@@ -1,8 +1,8 @@
 from typing import Optional, Union, List
 import os
 from huggingface_hub import HfApi, login
-from .config_utils import Config
-from .data_utils import convert_to_json_list, save_json
+from easyllm_kit.configs.base import Config
+from easyllm_kit.utils.data_utils import convert_to_json_list, save_json
 from datasets import load_dataset
 
 

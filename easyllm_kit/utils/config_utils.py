@@ -1,8 +1,6 @@
 import os
 from datetime import datetime
 
-from omegaconf import OmegaConf
-from registrable import Registrable
 
 
 def format_value(value):
@@ -26,69 +24,43 @@ def generate_output_dir(base_dir, exp_name, **kwargs):
     return os.path.join(output_dir, temp_str)
 
 
-class Config(Registrable):
-    @staticmethod
-    def parse_from_yaml_config(yaml_config, **kwargs):
-        raise NotImplementedError
 
-    @staticmethod
-    def build_from_yaml_file(yaml_dir, **kwargs):
-        """Load yaml config file from disk.
+# @Config.register('train_experiment_config')
+# class TrainConfig(Config):
+#     @staticmethod
+#     def parse_from_yaml_config(config, **kwargs):
+#         experiment_name = kwargs.get('experiment_name')
+#         experiment_config = config.get(experiment_name, None)
 
-        Args:
-            yaml_fn (str): Path of the yaml config file.
+#         # setup the base config
+#         merged_experiment_config = config['defaults'].copy()
 
-        Returns:
-            Config: Config object corresponding to cls.
-        """
-        config = OmegaConf.load(yaml_dir)
-        assert config.get('config_cls_name', None) is not None, "config_cls_name is not set"
-        config_cls_name = config.get('config_cls_name')
-        config_cls = Config.by_name(config_cls_name.lower())
-        return config_cls.parse_from_yaml_config(config, **kwargs)
+#         # overwrite some config values
+#         for key, value in experiment_config.items():
+#             merged_experiment_config[key] = value
 
+#         output_dir = merged_experiment_config.get('output_dir', '')
+#         merged_experiment_config['output_dir'] = generate_output_dir(output_dir,
+#                                                                      experiment_name, **experiment_config)
 
-@Config.register('train_experiment_config')
-class TrainConfig(Config):
-    @staticmethod
-    def parse_from_yaml_config(config, **kwargs):
-        experiment_name = kwargs.get('experiment_name')
-        experiment_config = config.get(experiment_name, None)
+#         return merged_experiment_config
 
-        # setup the base config
-        merged_experiment_config = config['defaults'].copy()
+#     @staticmethod
+#     def make_args_to_str(merged_experiment_config):
+#         params = []
+#         for key, value in merged_experiment_config.items():
+#             formatted_value = format_value(value)
+#             params.append(f"--{key} {formatted_value}")
 
-        # overwrite some config values
-        for key, value in experiment_config.items():
-            merged_experiment_config[key] = value
+#         param_str = ' '.join(params)
 
-        output_dir = merged_experiment_config.get('output_dir', '')
-        merged_experiment_config['output_dir'] = generate_output_dir(output_dir,
-                                                                     experiment_name, **experiment_config)
-
-        return merged_experiment_config
-
-    @staticmethod
-    def make_args_to_str(merged_experiment_config):
-        params = []
-        for key, value in merged_experiment_config.items():
-            formatted_value = format_value(value)
-            params.append(f"--{key} {formatted_value}")
-
-        param_str = ' '.join(params)
-
-        return param_str
+#         return param_str
 
 
-@Config.register('hf_config')
-class HFConfig(Config):
-    @staticmethod
-    def parse_from_yaml_config(config: dict, **kwargs):
-        assert config.get('hf_token', None) is not None, "HF_TOKEN is not set"
-        return config
+# @Config.register('hf_config')
+# class HFConfig(Config):
+#     @staticmethod
+#     def parse_from_yaml_config(config: dict, **kwargs):
+#         assert config.get('hf_token', None) is not None, "HF_TOKEN is not set"
+#         return config
 
-@Config.register('llm_config')
-class LLMConfig(Config):
-    @staticmethod
-    def parse_from_yaml_config(config: dict, **kwargs):
-        return config

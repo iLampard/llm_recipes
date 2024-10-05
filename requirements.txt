@@ -5,3 +5,4 @@ registrable
 huggingface_hub
 datasets
 pyyaml
+openai
