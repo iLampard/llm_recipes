@@ -19,7 +19,7 @@ def image_to_base64(image: Image.Image) -> str:
     return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
 
-def save_json(filename: str, data: Union[List, dict]) -> None:
+def save_json(data: Union[List, dict], filename: str) -> None:
     """
     Save data as JSON to the specified path
     """
