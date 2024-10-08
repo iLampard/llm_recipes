@@ -26,7 +26,7 @@ class LLMConfig(Config):
     @staticmethod
     def parse_from_yaml_config(config: dict, **kwargs):
         model_config = config['model']
-        
+
         # Extract known fields from the config
         known_fields = [
             'model_name', 'use_api', 'api_key', 'api_url', 'device',

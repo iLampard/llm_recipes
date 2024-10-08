@@ -86,11 +86,3 @@ def generate_output_dir(base_dir, exp_name, **kwargs):
 #         param_str = ' '.join(params)
 
 #         return param_str
-
-
-# @Config.register('hf_config')
-# class HFConfig(Config):
-#     @staticmethod
-#     def parse_from_yaml_config(config: dict, **kwargs):
-#         assert config.get('hf_token', None) is not None, "HF_TOKEN is not set"
-#         return config
