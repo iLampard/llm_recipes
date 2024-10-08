@@ -1,9 +1,10 @@
+import ast
 import os
 from datetime import datetime
+from typing import Any
 
 
-
-def format_value(value):
+def make_json_compatible_value(value):
     if isinstance(value, bool):
         return str(value).lower()
     elif isinstance(value, (int, float)):
@@ -14,6 +15,38 @@ def format_value(value):
         return str(value)
 
 
+def convert_str_2_list_or_float(value: str) -> Any:
+    """
+    Parse a string value into its appropriate Python type.
+    
+    Args:
+        value (str): The string value to parse.
+    
+    Returns:
+        The parsed value in its appropriate type.
+    """
+    # Try to evaluate as a literal first
+    try:
+        return ast.literal_eval(value)
+    except (ValueError, SyntaxError):
+        pass
+
+    # If it's not a literal, try other conversions
+    if value.lower() == 'true':
+        return True
+    elif value.lower() == 'false':
+        return False
+
+    try:
+        return int(value)
+    except ValueError:
+        try:
+            return float(value)
+        except ValueError:
+            # If all else fails, return the original string
+            return value
+
+
 def generate_output_dir(base_dir, exp_name, **kwargs):
     timestamp = datetime.now().strftime("%m%d-%H%M")
     output_dir = base_dir
@@ -22,8 +55,6 @@ def generate_output_dir(base_dir, exp_name, **kwargs):
         temp_str += f'{k}-{v}'
     temp_str += timestamp
     return os.path.join(output_dir, temp_str)
-
-
 
 # @Config.register('train_experiment_config')
 # class TrainConfig(Config):
@@ -63,4 +94,3 @@ def generate_output_dir(base_dir, exp_name, **kwargs):
 #     def parse_from_yaml_config(config: dict, **kwargs):
 #         assert config.get('hf_token', None) is not None, "HF_TOKEN is not set"
 #         return config
-

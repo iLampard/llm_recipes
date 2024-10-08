@@ -9,6 +9,7 @@ from easyllm_kit.utils.data_utils import (
     save_json,
     download_data_from_hf
 )
+from config_utils import make_json_compatible_value, convert_str_2_list_or_float
 
 __all__ = [
     'get_logger',
@@ -17,5 +18,7 @@ __all__ = [
     'print_trainable_layers',
     'read_json',
     'save_json',
-    'download_data_from_hf'
+    'download_data_from_hf',
+    'make_json_compatible_value',
+    'convert_str_2_list_or_float'
 ]

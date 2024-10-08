@@ -6,3 +6,6 @@ huggingface_hub
 datasets
 pyyaml
 openai
+evaluate
+numpy
+rouge_scorer

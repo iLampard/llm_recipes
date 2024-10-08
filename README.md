@@ -52,5 +52,10 @@ print(response)
 ```
 
 
+## Reference
 
+The following repositories are used in `easyllm_kit`, either in close to original form or as an inspiration:
+
+- [Amazon KDD Cup 2024 Starter Kit](https://gitlab.aicrowd.com/aicrowd/challenges/amazon-kdd-cup-2024/amazon-kdd-cup-2024-starter-kit)
+- [EasyTPP](https://github.com/ant-research/EasyTemporalPointProcess)
 
