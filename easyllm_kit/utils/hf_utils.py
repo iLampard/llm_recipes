@@ -1,8 +1,7 @@
-from typing import Optional, Union, List
-from huggingface_hub import HfApi, login
+from typing import Union, List
+from huggingface_hub import login
 from easyllm_kit.configs.base import Config
 from easyllm_kit.utils.data_utils import download_data_from_hf
-
 
 
 # Debugging: Print the evaluation metrics after training
@@ -36,6 +35,7 @@ def print_trainable_layers(model):
 
 
 class HFHelper:
+    @staticmethod
     def login_from_config(self, config_path: str):
         """
         Login to Hugging Face using a token from a YAML config file.
@@ -45,16 +45,14 @@ class HFHelper:
         """
 
         hf_config = Config.build_from_yaml_file(config_path)
-        
-        self.token = hf_config.hf_token
-        if not self.token:
-            self.logger.warning("No 'hf_token' found in the config file.")
-            return
-        
-        login(token=self.token) 
 
+        if not hf_config.hf_token:
+            raise Warning("No 'hf_token' found in the config file.")
+
+        login(token=hf_config.hf_token)
+
+    @staticmethod
     def download_data_from_hf(
-            self,
             hf_dir: str,
             subset_name: Union[str, List[str], None] = None,
             split: Union[str, List[str], None] = None,
