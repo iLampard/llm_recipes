@@ -51,6 +51,79 @@ response = model.generate('hello')
 print(response)
 ```
 
+### Download dataset from HuggingFace
+
+We demonstrate how to download datasets from Hugging Face using the `HFHelper` class. The `HFHelper` class provides a convenient method to log in to Hugging Face and download datasets directly to your local machine. 
+
+To use this functionality, you need to have your Hugging Face token stored in a YAML configuration file. The token allows you to access private datasets and repositories.
+
+```yaml
+config_cls_name: hf_config
+
+base:
+  hf_token: xxx
+```
+
+Then we can download the dataset with the following code.
+
+```python
+from easyllm_kit.utils import HFHelper, download_data_from_hf
+
+need_login = True
+    
+if need_login:
+    # have to login
+    HFHelper.login_from_config('hf_config.yaml')
+
+hf_dataset_dir = 'weaverbirdllm/famma'
+subset_name = ''
+split = 'validation'
+save_dir = './data'
+download_data_from_hf(hf_dataset_dir, subset_name, split, save_dir)
+```
+
+### Calling metrics 
+
+We provide a set of metrics to evaluate the performance of the LLM. The `Metrics` class provides a unified interface for accessing these evaluation methods.
+
+Here’s an example of how to use the `Metrics` class to get evaluation methods:
+
+```python
+from easyllm_kit.metrics import Metrics
+
+def get_evaluation_methods():
+    """
+    Get evaluation methods including accuracy, sentence transformers, and other metrics.
+
+    Returns:
+    - A dictionary mapping metric names to their respective evaluation functions.
+    """
+    return {
+        "accuracy": Metrics.by_name("accuracy").calculate,
+        "bool": Metrics.by_name("accuracy").calculate,
+        "hit rate@3": Metrics.by_name("hit_ratio").calculate,
+        "rougel": Metrics.by_name("rouge_l").calculate,
+        "sent-transformer": lambda generated_text, reference_texts: Metrics.by_name("cosine_similarity").calculate(
+            generated_text=generated_text,
+            reference_texts=reference_texts,
+            model_name="all-MiniLM-L6-v2",
+        ),
+        "multilingual-sent-transformer": lambda generated_text, reference_texts: Metrics.by_name("cosine_similarity").calculate(
+            generated_text=generated_text,
+            reference_texts=reference_texts,
+            model_name="paraphrase-multilingual-MiniLM-L12-v2",
+        ),
+        "micro f1": Metrics.by_name("micro_f1").calculate,
+        "ndcg": Metrics.by_name("ndcg").calculate,
+        "bleu": Metrics.by_name("bleu").calculate,
+        "jp-bleu": lambda generated_text, reference_text: Metrics.by_name("bleu").calculate(
+            generated_text=generated_text,
+            reference_text=reference_text,
+            is_japanese=True,
+        ),
+    }
+```
+
 
 ## Reference
 

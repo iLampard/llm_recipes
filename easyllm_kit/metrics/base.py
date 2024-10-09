@@ -1,16 +1,19 @@
 from typing import List, Union, Tuple
 
-import evaluate
 import numpy as np
-import rouge_scorer
-
+from rouge_score import rouge_scorer
 from registrable import Registrable
 from sentence_transformers import SentenceTransformer
 import torch
+import sacrebleu
+
+sentence_transformer_model_cache = {}
 
 
 class Metrics(Registrable):
-    pass
+    @staticmethod
+    def calculate(**kwargs):
+        return NotImplementedError
 
 
 @Metrics.register('accuracy')
@@ -93,13 +96,14 @@ class CosSim(Metrics):
             similarity_scores = []
             for reference_text in reference_texts:
                 # Embedding for each reference text
-                reference_embedding = self.model.encode([reference_text])[0]
+                reference_embedding = model.encode([reference_text])[0]
                 # Compute cosine similarity for each reference
                 individual_score = np.dot(generated_embedding, reference_embedding) / (
                         np.linalg.norm(generated_embedding) * np.linalg.norm(reference_embedding))
                 similarity_scores.append(individual_score)
             # Calculate and ensure non-negative average score
             return max(np.mean(similarity_scores), 0)
+
 
 @Metrics.register('bleu')
 class BLEU(Metrics):
@@ -117,22 +121,20 @@ class BLEU(Metrics):
         Returns:
         - float: The BLEU score as a percentage (0 to 1 scale) for the generated text against the reference truth.
         """
-        global sacrebleu
-        if sacrebleu is None:
-            sacrebleu = evaluate.load("sacrebleu")
 
         # Preprocess input texts
         generated_text = generated_text.lstrip("\n").rstrip("\n").split("\n")[0]
-        candidate = [generated_text]
-        reference = [[reference_text]]
+        reference = [reference_text.strip()]
 
-        # Compute BLEU score with or without Japanese-specific tokenization
-        bleu_args = {"predictions": candidate, "references": reference, "lowercase": True}
+        # Compute BLEU score directly using sacrebleu
         if is_japanese:
-            bleu_args["tokenize"] = "ja-mecab"
-        score = sacrebleu.compute(**bleu_args)["score"] / 100
+            bleu = sacrebleu.corpus_bleu([generated_text], [[ref] for ref in reference], tokenize='ja-mecab',
+                                         lowercase=True)
+        else:
+            bleu = sacrebleu.corpus_bleu([generated_text], [[ref] for ref in reference], lowercase=True)
 
-        return score
+        return bleu.score / 100
+
 
 @Metrics.register('f1')
 class F1(Metrics):
@@ -165,3 +167,79 @@ class F1(Metrics):
             return 0
         else:
             return 2 * precision * recall / (precision + recall)
+
+
+@Metrics.register('micro_f1')
+class MicroF1(Metrics):
+    @staticmethod
+    def calculate(extracted_entities: List[str], ground_truth_entities: List[str]) -> Tuple[int, int, int]:
+        """
+        Calculates true positives, false positives, and false negatives for entity extraction.
+
+        This function compares a list of extracted entities against a list of ground truth entities
+        to determine the count of true positives (correctly extracted entities), false positives
+        (incorrectly extracted entities), and false negatives (missed entities).
+
+        Both lists are case-insensitive, and leading/trailing spaces in extracted entities are ignored.
+
+        Parameters:
+        - extracted_entities (List[str]): The list of entities extracted by the model.
+        - ground_truth_entities (List[str]): The list of actual entities (ground truth).
+
+        Returns:
+        - Tuple[int, int, int]: A tuple containing the counts of true positives, false positives, and false negatives.
+        """
+        # Normalize the extracted entities by making them lowercase and stripping leading/trailing spaces
+        normalized_extracted_entities = [entity.lower().strip() for entity in extracted_entities]
+
+        # Normalize the ground truth entities by making them lowercase
+        normalized_ground_truth_entities = [entity.lower() for entity in ground_truth_entities]
+
+        # Calculate true positives by finding the intersection between extracted and ground truth entities
+        true_positives = len(set(normalized_extracted_entities).intersection(set(normalized_ground_truth_entities)))
+
+        # Calculate false positives as extracted entities not in ground truth
+        false_positives = len(normalized_extracted_entities) - true_positives
+
+        # Calculate false negatives as ground truth entities not extracted
+        false_negatives = len(normalized_ground_truth_entities) - true_positives
+
+        return true_positives, false_positives, false_negatives
+
+
+@Metrics.register('ndcg')
+class NDCG(Metrics):
+    @staticmethod
+    def calculate(predicted_relevance_scores: List[int], true_relevance_weights: List[float]) -> float:
+        """
+        Calculates and evaluates the Normalized Discounted Cumulative Gain (NDCG) score directly from predicted relevance scores
+        against true relevance weights. It normalizes the scores to ensure a fair comparison, trimming the predicted scores
+        if necessary to match the length of the true relevance weights.
+
+        Parameters:
+        - predicted_relevance_scores (List[int]): Indices of items ranked by the algorithm, expected to be integers starting from 1.
+        - true_relevance_weights (List[float]): Actual relevance weights for the items, with higher values indicating greater relevance.
+
+        Returns:
+        - float: The NDCG score, normalized against the ideal ranking, ranging from 0 to 1.
+        """
+        # Trim the predicted scores to match the true scores length if necessary
+        if len(predicted_relevance_scores) > len(true_relevance_weights):
+            predicted_relevance_scores = predicted_relevance_scores[:len(true_relevance_weights)]
+
+        dcg, idcg = 0.0, 0.0
+
+        # Calculate DCG for the predicted ranking
+        for i, score_index in enumerate(predicted_relevance_scores, start=1):
+            if score_index - 1 < len(true_relevance_weights):
+                relevance = true_relevance_weights[score_index - 1]
+            else:
+                relevance = 0
+            dcg += (np.power(2, relevance) - 1) / np.log2(i + 1)
+
+        # Calculate IDCG using sorted true relevance weights
+        for i, weight in enumerate(sorted(true_relevance_weights, reverse=True), start=1):
+            idcg += (np.power(2, weight) - 1) / np.log2(i + 1)
+
+        # Avoid division by zero
+        return 0 if idcg == 0 else dcg / idcg

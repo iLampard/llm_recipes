@@ -90,6 +90,6 @@ def download_data_from_hf(
             split_path = os.path.join(save_dir, subset, f"{subset}_{split_name}.json" if subset else f"{split_name}.json")
             os.makedirs(os.path.dirname(split_path), exist_ok=True)
 
-            save_json(split_path, json_list)
+            save_json(json_list, split_path)
             print(f"Saved {split_name} split of {subset} subset to {split_path}")
 

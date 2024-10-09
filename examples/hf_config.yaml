@@ -1,0 +1,4 @@
+config_cls_name: hf_config
+
+base:
+  hf_token: xxx

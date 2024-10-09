@@ -36,7 +36,7 @@ def print_trainable_layers(model):
 
 class HFHelper:
     @staticmethod
-    def login_from_config(self, config_path: str):
+    def login_from_config(config_path: str):
         """
         Login to Hugging Face using a token from a YAML config file.
 
