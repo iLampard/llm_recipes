@@ -31,6 +31,8 @@ model:
   use_api: true
   api_key: xx
   api_url: https://api.openai.com/v1/chat/completions
+
+generation:
   temperature: 0.3
   top_p: 0.9
   repetition_penalty: 1.1
