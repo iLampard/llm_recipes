@@ -8,3 +8,4 @@ pyyaml
 openai
 numpy
 rouge_score
+colorama

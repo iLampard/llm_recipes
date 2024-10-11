@@ -40,8 +40,10 @@ class Llama3(LLM):
         if isinstance(prompts, str):
             prompts = [prompts]  # Convert single string to list
 
+        messages = [{'role': 'user', 'content': prompt} for prompt in prompts]
+
         inputs = self.tokenizer.apply_chat_template(
-            prompts,
+            messages,
             tokenize=True,
             add_generation_prompt=True,
             return_tensors="pt",
@@ -54,8 +56,8 @@ class Llama3(LLM):
                                       temperature=self.generation_config.temperature)
 
         generated_text = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
-
-        return generated_text
+        generated_text = self.parse_outputs(generated_text)
+        return generated_text if len(generated_text) > 1 else generated_text[0]
 
     def load_model(self):
         """
@@ -63,7 +65,10 @@ class Llama3(LLM):
         """
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.model_config.model_dir,
-            **self.model_config,
+            use_fast=self.model_config.use_fast_tokenizer,
+            split_special_tokens=self.model_config.split_special_tokens,
+            torch_dtype=self.model_config.infer_dtype,
+            device_map=self.model_config.device_map,
         )
 
         if self.model_config.new_special_tokens is not None:
@@ -78,8 +83,26 @@ class Llama3(LLM):
                     'New tokens have been added, changed `resize_vocab` to True.')
 
         self.model = AutoModelForCausalLM.from_pretrained(self.model_config.model_dir,
-                                                          **self.model_config)
+                                                          torch_dtype=self.model_config.infer_dtype,
+                                                          device_map=self.model_config.device_map).to(
+            self.model_config.device)
 
         param_stats = print_trainable_parameters(self.model)
 
         logger.info(param_stats)
+
+    @staticmethod
+    def parse_outputs(outputs):
+        # Parse the output
+        parsed_outputs = []
+        for output in outputs:
+            parsed_output = output.strip("[]'")  # Remove the list brackets and quotes
+            parsed_output = parsed_output.replace("\\n", "\n")  # Replace escaped newlines with actual newlines
+            # Split the output into lines
+            lines = parsed_output.split("\n")
+            # Extract the relevant part of the output
+            # Assuming the last line is the assistant's response
+            assistant_response = lines[-1].strip()
+
+            parsed_outputs.append({'assistant': assistant_response})
+        return parsed_outputs
