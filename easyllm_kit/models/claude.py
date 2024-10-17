@@ -17,13 +17,13 @@ class Claude35Sonnet(LLM):
             self.client = anthropic.Client(api_key=self.model_config['api_key'])
 
     def generate(self, prompt: str, **kwargs):
-        if self.model_config.use_litellm_api:   
+        if self.model_config.use_litellm_api:
             completion = self.client.chat.completions.create(
                 model=self.model_config.model_name if kwargs.get('model_name') is None else kwargs.get('model_name'),
-            max_tokens=self.generation_config.max_length,
-            temperature=self.generation_config.temperature,
-            messages=[
-                {"role": "user", "content": prompt}
+                max_tokens=self.generation_config.max_length,
+                temperature=self.generation_config.temperature,
+                messages=[
+                    {"role": "user", "content": prompt}
                 ]
             )
         else:
@@ -34,4 +34,5 @@ class Claude35Sonnet(LLM):
                 max_tokens=self.generation_config['max_length'],
                 temperature=self.generation_config['temperature']
             )
-        return completion.choices[0].message.content if self.model_config.get('use_litellm_api', False) else completion.choices[0].text
+
+        return completion.choices[0].message.content
