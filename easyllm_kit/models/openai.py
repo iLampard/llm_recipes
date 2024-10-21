@@ -9,7 +9,7 @@ class GPT4o(LLM):
         import openai
         self.model_config = config['model_config']
         self.generation_config = config['generation_config']
-        self.client = openai.OpenAI(api_key=self.model_config.api_key, base_url=self.model_config.api_url)
+        self.client = openai.OpenAI(api_key=self.model_config.api_key)
         
     def generate(self, prompt: str, **kwargs):
         completion = self.client.chat.completions.create(

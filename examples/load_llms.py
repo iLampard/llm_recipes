@@ -5,7 +5,7 @@ import argparse
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load various LLMs and generate answers")
     parser.add_argument("--config_dir",
-                        default='claude_model_gen.yaml',
+                        default='gpt_model_gen.yaml',
                         help="Path to configuration file in yaml format")
     parser.add_argument("--output_dir", help="Path to save the output JSON file")
     args = parser.parse_args()
