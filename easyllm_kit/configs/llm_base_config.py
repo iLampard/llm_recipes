@@ -277,11 +277,6 @@ class ModelArguments(QuantizationArguments, ProcessorArguments, ExportArguments,
         init=False,
         metadata={"help": "Torch data type for computing model outputs, derived from `fp/bf16`. Do not specify it."},
     )
-    device_map: Optional[Union[str, Dict[str, Any]]] = field(
-        default=None,
-        init=False,
-        metadata={"help": "Device map for model placement, derived from training stage. Do not specify it."},
-    )
     model_max_length: Optional[int] = field(
         default=None,
         init=False,
