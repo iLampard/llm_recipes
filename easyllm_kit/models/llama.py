@@ -1,6 +1,7 @@
 from typing import Union, List
 
 from sympy.physics.units import temperature
+from torch.cuda import max_memory_allocated
 
 from easyllm_kit.models.base import LLM
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -84,8 +85,8 @@ class Llama3(LLM):
 
         self.model = AutoModelForCausalLM.from_pretrained(self.model_config.model_dir,
                                                           torch_dtype=self.model_config.infer_dtype,
-                                                          device_map=self.model_config.device_map).to(
-            self.model_config.device)
+                                                          device_map=self.model_config.device_map,
+                                                          max_memory=self.model_config.max_memory)
 
         param_stats = print_trainable_parameters(self.model)
 

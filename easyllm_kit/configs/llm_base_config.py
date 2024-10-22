@@ -164,6 +164,11 @@ class ModelArguments(QuantizationArguments, ProcessorArguments, ExportArguments,
     device: str = field(default='cuda', metadata={'help': 'Device to run the model on (e.g., "cuda" or "cpu").'})
     device_map: Optional[Dict[str, Any]] = field(default='auto', metadata={'help': 'Mapping of device placement for model layers.'})
 
+    max_memory: Optional[Dict[str, int]] = field(
+        default=None,
+        metadata={"help": "Dictionary specifying maximum memory (in GB) for each device."},
+    )
+
     adapter_folder: Optional[str] = field(
         default=None,
         metadata={"help": "The folder containing the adapter weights to load."},
