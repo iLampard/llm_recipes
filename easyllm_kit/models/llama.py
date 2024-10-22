@@ -87,6 +87,14 @@ class Llama3(LLM):
                                                           torch_dtype=self.model_config.infer_dtype,
                                                           device_map=self.model_config.device_map,
                                                           max_memory=self.model_config.max_memory)
+        # Initialize DeepSpeed inference
+        if self.model_config.use_deepspeed:
+            import deepspeed
+            self.model = deepspeed.init_inference(self.model,
+                                                mp_size=self.model_config.mp_size,
+                                                dtype=self.model_config.infer_dtype,
+                                                replace_method='auto',
+                                                replace_with_kernel_inject=True)
 
         param_stats = print_trainable_parameters(self.model)
 

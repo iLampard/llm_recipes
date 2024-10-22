@@ -169,6 +169,16 @@ class ModelArguments(QuantizationArguments, ProcessorArguments, ExportArguments,
         metadata={"help": "Dictionary specifying maximum memory (in GB) for each device."},
     )
 
+    use_deepspeed: bool = field(
+        default=False,
+        metadata={"help": "Whether or not to use DeepSpeed for inference."},
+    )
+    
+    mp_size: int = field(
+        default=1,
+        metadata={"help": "Model parallel size for DeepSpeed. Default is 1 (no model parallelism)."},
+    )
+
     adapter_folder: Optional[str] = field(
         default=None,
         metadata={"help": "The folder containing the adapter weights to load."},
