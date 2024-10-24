@@ -169,24 +169,21 @@ class ModelArguments(QuantizationArguments, ProcessorArguments, ExportArguments,
         metadata={"help": "Dictionary specifying maximum memory (in GB) for each device."},
     )
 
-    use_deepspeed: bool = field(
+    use_vllm: bool = field(
         default=False,
-        metadata={"help": "Whether or not to use DeepSpeed for inference."},
+        metadata={"help": "Whether or not to use vLLM for inference."},
     )
-    
-    mp_size: int = field(
+
+    tensor_parallel_size: int = field(
         default=1,
-        metadata={"help": "Model parallel size for DeepSpeed. Default is 1 (no model parallelism)."},
+        metadata={"help": "Number of devices to use for tensor parallelism. Default is 1 (no parallelism). Used for inference initialization on vLLM."},
     )
 
     adapter_folder: Optional[str] = field(
         default=None,
         metadata={"help": "The folder containing the adapter weights to load."},
     )
-    cache_dir: Optional[str] = field(
-        default=None,
-        metadata={"help": "Where to store the pre-trained models downloaded from huggingface.co or modelscope.cn."},
-    )
+
     use_fast_tokenizer: bool = field(
         default=True,
         metadata={"help": "Whether or not to use one of the fast tokenizer (backed by the tokenizers library)."},
