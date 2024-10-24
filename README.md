@@ -22,6 +22,8 @@ pip install easyllm_kit
 
 ### Loading an LLM with a YAML config file
 
+#### Load gpt4o from OpenAI API
+
 We provide a yaml config file to define the model and its parameters.
 ```yaml
 config_cls_name: llm_config
@@ -31,6 +33,42 @@ model:
   use_api: true
   api_key: xx
   api_url: https://api.openai.com/v1/chat/completions
+
+generation:
+  temperature: 0.3
+  top_p: 0.9
+  repetition_penalty: 1.1
+```
+
+Then we can load the model and generate text with it.
+```python
+from easyllm_kit.models import LLM
+from easyllm_kit.configs import Config
+# Load configuration from YAML file
+model_config = Config.build_from_yaml_file('config.yaml')
+
+# Build the LLM model
+model = LLM.build_from_config(model_config)
+
+# Generate text
+response = model.generate('hello')
+print(response)
+```
+
+#### Load llama3.1 from local directory
+
+We load Llama-3.1-70B-Instruct from local directory with vLLM for multi-GPU inference.
+
+```yaml
+config_cls_name: llm_config
+task: llm_gen # currently not used
+
+model:
+  model_name: llama3
+  use_api: false
+  model_dir: /workspaces/data0/models/huggingface/meta-llama/Meta-Llama-3.1-8B-Instruct
+  use_vllm: true
+  tensor_parallel_size: 4
 
 generation:
   temperature: 0.3
