@@ -40,21 +40,18 @@ class Llama3(LLM):
         messages = [{'role': 'user', 'content': prompt} for prompt in prompts]
 
         # Initialize vllm inference
-        if self.model_config.use_deepspeed:
+        if self.model_config.use_vllm:
             from vllm import SamplingParams
 
             sampling_params = SamplingParams(temperature=self.generation_config.temperature, top_p=self.generation_config.top_p)
 
             # Perform inference
-
             conversations = self.tokenizer.apply_chat_template(
                 messages,
                 tokenize=False,
             )
 
             generated_text = self.model.generate([conversations], sampling_params)
-            # generated_text = [output.outputs.CompletionOutput.text for output in outputs]
-            # return outputs
         else:
             inputs = self.tokenizer.apply_chat_template(
                 messages,
@@ -74,7 +71,7 @@ class Llama3(LLM):
 
             generated_text = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
         
-        generated_text = self.parse_outputs(generated_text, self.model_config.use_deepspeed)
+        generated_text = self.parse_outputs(generated_text, self.model_config.use_vllm)
         return generated_text if len(generated_text) > 1 else generated_text[0]
 
     def load_model(self):
@@ -84,11 +81,10 @@ class Llama3(LLM):
         # Initialize vllm inference
         if self.model_config.use_vllm:
             from vllm import LLM as vLLM
-            self.model = vLLM(model=self.model_config.model_dir if self.model_config.cache_dir is not None else self.model_config.model_dir, 
+            self.model = vLLM(model=self.model_config.model_dir, 
                               tensor_parallel_size=self.model_config.tensor_parallel_size)
             
             self.tokenizer = self.model.get_tokenizer()
-            
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(
                 self.model_config.model_dir,
