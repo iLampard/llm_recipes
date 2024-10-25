@@ -1,4 +1,12 @@
+
+
 # EasyLLM_Kit
+
+[![PyPI Version](https://img.shields.io/pypi/v/easyllm_kit.svg)](https://pypi.org/project/easyllm_kit/)
+[![Python Version](https://img.shields.io/pypi/pyversions/easyllm_kit.svg)](https://pypi.org/project/easyllm_kit/)
+[![Downloads](https://pepy.tech/badge/easyllm_kit)](https://pepy.tech/project/easyllm_kit)
+
+
 
 `easyllm_kit` is a utility library designed to simplify interactions with various large language models (LLMs), providing easy-to-use functions for model deployment, configuration, and inference. 
 
@@ -66,7 +74,7 @@ task: llm_gen # currently not used
 model:
   model_name: llama3
   use_api: false
-  model_dir: /workspaces/data0/models/huggingface/meta-llama/Meta-Llama-3.1-8B-Instruct
+  model_dir: /workspaces/data0/models/huggingface/meta-llama/Meta-Llama-3.1-70B-Instruct
   use_vllm: true
   tensor_parallel_size: 4
 
@@ -76,7 +84,7 @@ generation:
   repetition_penalty: 1.1
 ```
 
-Then we can load the model and generate text with it.
+Then we can, using the same interface, to load the model and generate text with it.
 ```python
 from easyllm_kit.models import LLM
 from easyllm_kit.configs import Config
@@ -171,4 +179,5 @@ The following repositories are used in `easyllm_kit`, either in close to origina
 
 - [Amazon KDD Cup 2024 Starter Kit](https://gitlab.aicrowd.com/aicrowd/challenges/amazon-kdd-cup-2024/amazon-kdd-cup-2024-starter-kit)
 - [EasyTPP](https://github.com/ant-research/EasyTemporalPointProcess)
+- [LLamaTuner](https://github.com/jianzhnie/LLamaTuner/)
 
