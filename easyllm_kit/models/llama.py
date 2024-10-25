@@ -4,7 +4,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from easyllm_kit.utils import get_logger
 from easyllm_kit.utils import print_trainable_parameters
 
-logger = get_logger('easyllm')
+logger = get_logger('easyllm_kit')
 
 
 # ref: https://github.com/meta-llama/llama3/blob/main/llama/generation.py
@@ -43,7 +43,8 @@ class Llama3(LLM):
         if self.model_config.use_vllm:
             from vllm import SamplingParams
 
-            sampling_params = SamplingParams(temperature=self.generation_config.temperature, top_p=self.generation_config.top_p)
+            sampling_params = SamplingParams(temperature=self.generation_config.temperature,
+                                             top_p=self.generation_config.top_p)
 
             # Perform inference
             conversations = self.tokenizer.apply_chat_template(
@@ -52,6 +53,8 @@ class Llama3(LLM):
             )
 
             generated_text = self.model.generate([conversations], sampling_params)
+            # generated_text = [output.outputs.CompletionOutput.text for output in outputs]
+            # return outputs
         else:
             inputs = self.tokenizer.apply_chat_template(
                 messages,
@@ -65,12 +68,12 @@ class Llama3(LLM):
             inputs = {key: value.to(self.model_config.device) for key, value in inputs.items()}
 
             outputs = self.model.generate(**inputs,
-                                        do_sample=self.generation_config.do_sample,
-                                        max_new_tokens=self.generation_config.max_new_tokens,
-                                        temperature=self.generation_config.temperature)
+                                          do_sample=self.generation_config.do_sample,
+                                          max_new_tokens=self.generation_config.max_new_tokens,
+                                          temperature=self.generation_config.temperature)
 
             generated_text = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
-        
+
         generated_text = self.parse_outputs(generated_text, self.model_config.use_vllm)
         return generated_text if len(generated_text) > 1 else generated_text[0]
 
@@ -81,10 +84,11 @@ class Llama3(LLM):
         # Initialize vllm inference
         if self.model_config.use_vllm:
             from vllm import LLM as vLLM
-            self.model = vLLM(model=self.model_config.model_dir, 
+            self.model = vLLM(model=self.model_config.model_dir,
                               tensor_parallel_size=self.model_config.tensor_parallel_size)
-            
+
             self.tokenizer = self.model.get_tokenizer()
+
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(
                 self.model_config.model_dir,
@@ -105,11 +109,11 @@ class Llama3(LLM):
                     self.model_config.resize_vocab = True
                     logger.warning(
                         'New tokens have been added, changed `resize_vocab` to True.')
-            
+
                 self.model = AutoModelForCausalLM.from_pretrained(self.model_config.model_dir,
-                                                                torch_dtype=self.model_config.infer_dtype,
-                                                                device_map=self.model_config.device_map).to(self.model_config.device)
-                
+                                                                  torch_dtype=self.model_config.infer_dtype,
+                                                                  device_map=self.model_config.device_map).to(
+                    self.model_config.device)
 
                 param_stats = print_trainable_parameters(self.model)
 
@@ -123,11 +127,26 @@ class Llama3(LLM):
             # Iterate through each RequestOutput in the batch
             for request_output in outputs:
                 # Extract the 'text' field from each CompletionOutput in 'outputs'
+                print(request_output)
                 for completion in request_output.outputs:
-                    parsed_outputs.append(completion.text)
+                    cleaned_output = completion.text.split('<|end_header_id|>')[-1]
+                    # Strip any leading or trailing whitespace and newline characters
+                    cleaned_output = cleaned_output.strip()
+                    # Step 3: Remove the leading double quote, if present
+                    if cleaned_output.startswith('"'):
+                        cleaned_output = cleaned_output[1:]
+
+                    # Step 4: Remove the trailing single quote, if present
+                    if cleaned_output.endswith("'"):
+                        cleaned_output = cleaned_output[:-1]
+
+                    # Step 5: Wrap the cleaned output in double quotes
+                    cleaned_output = f'"{cleaned_output}"'
+
+                    parsed_outputs.append(cleaned_output)
 
             return parsed_outputs
-        else:   
+        else:
             for output in outputs:
                 parsed_output = output.strip("[]'")  # Remove the list brackets and quotes
                 parsed_output = parsed_output.replace("\\n", "\n")  # Replace escaped newlines with actual newlines
