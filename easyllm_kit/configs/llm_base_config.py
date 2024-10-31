@@ -143,7 +143,11 @@ class ModelArguments(QuantizationArguments, ProcessorArguments, ExportArguments,
     api_key: Optional[str] = field(default=None, metadata={'help': 'API key for accessing the model if using an API.'})
     api_url: Optional[str] = field(default=None, metadata={'help': 'API URL for accessing the model if using an API.'})
 
-    use_litellm_api: bool = field(default=False, metadata={'help': 'Flag to indicate if the model should be accessed via litellm API.'})
+    is_multimodal: bool = field(default=False,
+                                metadata={'help': 'Flag to indicate if the model is multimodal.'})
+
+    use_litellm_api: bool = field(default=False, metadata={
+        'help': 'Flag to indicate if the model should be accessed via litellm API.'})
 
     model_dir: Optional[str] = field(
         default=None,
@@ -162,7 +166,8 @@ class ModelArguments(QuantizationArguments, ProcessorArguments, ExportArguments,
     )
 
     device: str = field(default='cuda', metadata={'help': 'Device to run the model on (e.g., "cuda" or "cpu").'})
-    device_map: Optional[Dict[str, Any]] = field(default='auto', metadata={'help': 'Mapping of device placement for model layers.'})
+    device_map: Optional[Dict[str, Any]] = field(default='auto',
+                                                 metadata={'help': 'Mapping of device placement for model layers.'})
 
     max_memory: Optional[Dict[str, int]] = field(
         default=None,
@@ -176,7 +181,8 @@ class ModelArguments(QuantizationArguments, ProcessorArguments, ExportArguments,
 
     tensor_parallel_size: int = field(
         default=1,
-        metadata={"help": "Number of devices to use for tensor parallelism. Default is 1 (no parallelism). Used for inference initialization on vLLM."},
+        metadata={
+            "help": "Number of devices to use for tensor parallelism. Default is 1 (no parallelism). Used for inference initialization on vLLM."},
     )
 
     adapter_folder: Optional[str] = field(

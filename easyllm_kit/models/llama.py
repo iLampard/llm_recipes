@@ -1,6 +1,6 @@
 from typing import Union, List
 from easyllm_kit.models.base import LLM
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, MllamaForConditionalGeneration, AutoProcessor
 from easyllm_kit.utils import get_logger
 from easyllm_kit.utils import print_trainable_parameters
 
@@ -16,6 +16,7 @@ class Llama3(LLM):
     def __init__(self, config):
         self.model_config = config['model_config']
         self.generation_config = config['generation_config']
+        self.model = None  # Initialize model attribute
         self.load_model()
 
     def generate(self, prompts: Union[str, List[str]], **kwargs) -> str:
@@ -32,6 +33,9 @@ class Llama3(LLM):
         Returns:
             str: The generated text.
         """
+
+        if self.model is None:
+            raise RuntimeError("Model has not been loaded. Please check the initialization.")
 
         # Ensure prompts is a list
         if isinstance(prompts, str):
@@ -84,19 +88,27 @@ class Llama3(LLM):
         # Initialize vllm inference
         if self.model_config.use_vllm:
             from vllm import LLM as vLLM
+            print(self.model_config.tensor_parallel_size)
             self.model = vLLM(model=self.model_config.model_dir,
                               tensor_parallel_size=self.model_config.tensor_parallel_size)
 
             self.tokenizer = self.model.get_tokenizer()
 
+        elif self.model_config.is_multimodal:
+            self.model = MllamaForConditionalGeneration.from_pretrained(
+                self.model_config.model_dir,
+                torch_dtype=self.model_config.infer_dtype,
+                device_map=self.model_config.device_map
+            )
+            self.tokenizer = AutoProcessor.from_pretrained(self.model_config.model_dir)
+            print('load llama-3.2')
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(
                 self.model_config.model_dir,
                 use_fast=self.model_config.use_fast_tokenizer,
                 split_special_tokens=self.model_config.split_special_tokens,
                 torch_dtype=self.model_config.infer_dtype,
-                device_map=self.model_config.device_map,
-                cache_dir=self.model_config.cache_dir
+                device_map=self.model_config.device_map
             )
 
             if self.model_config.new_special_tokens is not None:
@@ -110,14 +122,14 @@ class Llama3(LLM):
                     logger.warning(
                         'New tokens have been added, changed `resize_vocab` to True.')
 
-                self.model = AutoModelForCausalLM.from_pretrained(self.model_config.model_dir,
-                                                                  torch_dtype=self.model_config.infer_dtype,
-                                                                  device_map=self.model_config.device_map).to(
-                    self.model_config.device)
+            self.model = AutoModelForCausalLM.from_pretrained(self.model_config.model_dir,
+                                                              torch_dtype=self.model_config.infer_dtype,
+                                                              device_map=self.model_config.device_map).to(
+                self.model_config.device)
 
-                param_stats = print_trainable_parameters(self.model)
+            param_stats = print_trainable_parameters(self.model)
 
-                logger.info(param_stats)
+            logger.info(param_stats)
 
     @staticmethod
     def parse_outputs(outputs, use_vllm):

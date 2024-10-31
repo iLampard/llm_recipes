@@ -88,6 +88,7 @@ def get_logger(name, log_file=None, log_level=logging.INFO, file_mode='w'):
         file_handler = logging.FileHandler(log_file, file_mode)
         handlers.append(file_handler)
 
+
     formatter = ColorfulFormatter(
         '%(asctime)s, %(name)s [%(name)s.%(funcName)s:%(lineno)d] '
         '%(levelname)s - %(message)s',
@@ -148,11 +149,19 @@ def get_root_logger(log_file=None, log_level=logging.INFO):
     Returns:
         :obj:`logging.Logger`: The obtained logger
     """
-    logger = get_logger(name='easyllm_kit',
-                        log_file=log_file,
-                        log_level=log_level)
+    root_logger = logging.getLogger('easyllm_kit')
+    root_logger.setLevel(log_level)
 
-    return logger
+    if log_file is not None:
+        # Check if a FileHandler already exists
+        if not any(isinstance(handler, logging.FileHandler) for handler in root_logger.handlers):
+            file_handler = logging.FileHandler(log_file)
+            file_handler.setLevel(log_level)
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            file_handler.setFormatter(formatter)
+            root_logger.addHandler(file_handler)
+
+    return root_logger
 
 
 def get_outdir(path: str, *paths, inc: bool = False) -> str:
