@@ -2,6 +2,9 @@ from typing import Union, List
 from huggingface_hub import login
 from easyllm_kit.configs.base import Config
 from easyllm_kit.utils.data_utils import download_data_from_hf
+from easyllm_kit.utils.log_utils import get_logger
+
+logger = get_logger('easyllm_kit')
 
 
 # Debugging: Print the evaluation metrics after training
@@ -47,9 +50,15 @@ class HFHelper:
         hf_config = Config.build_from_yaml_file(config_path)
 
         if not hf_config.hf_token:
-            raise Warning("No 'hf_token' found in the config file.")
+            logger.warning("No 'hf_token' found in the config file.")
+            return
 
-        login(token=hf_config.hf_token)
+        try:
+            login(token=hf_config.hf_token)
+            logger.info("Successfully logged in to Hugging Face.")
+        except Exception as e:
+            logger.error(f"Failed to log in: {e}")
+            raise
 
     @staticmethod
     def download_data_from_hf(
@@ -61,4 +70,30 @@ class HFHelper:
         """
         Download from huggingface repo and convert all data files into json files
         """
-        download_data_from_hf(hf_dir, subset_name, split, save_dir)
+        try:
+            download_data_from_hf(hf_dir, subset_name, split, save_dir)
+            logger.info(f"Data downloaded successfully from {hf_dir} to {save_dir}.")
+        except Exception as e:
+            logger.error(f"Failed to download data: {e}")
+            raise
+
+    @staticmethod
+    def download_model_from_hf(
+            model_repo: str,
+            save_dir: str = "./models"
+    ) -> None:
+        """
+        Download a model from Hugging Face Hub.
+
+        Args:
+            model_repo (str): The model repository ID on Hugging Face Hub.
+            save_dir (str): Directory to save the downloaded model.
+        """
+        from huggingface_hub import snapshot_download
+        # Download the entire model, if some files are missing they will be downloaded automatically
+        try:
+            snapshot_download(repo_id=model_repo, local_dir=save_dir, resume_download=True)
+            logger.info(f"Model {model_repo} downloaded successfully to {save_dir}.")
+        except Exception as e:
+            logger.error(f"Failed to download model: {e}")
+            raise
