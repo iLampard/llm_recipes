@@ -19,8 +19,10 @@ class MiniCPM(LLM):
     def load_model(self):
         self.model = AutoModel.from_pretrained(self.model_config.model_dir,
                                                torch_dtype=self.model_config.infer_dtype,
-                                               device_map=self.model_config.device_map)
-        self.processor = AutoTokenizer.from_pretrained(self.model_config.model_dir)
+                                               trust_remote_code=self.model_config.trust_remote_code)
+        self.model = self.model.eval().to(self.model_config.device)
+        self.processor = AutoTokenizer.from_pretrained(self.model_config.model_dir,
+                                                       trust_remote_code=self.model_config.trust_remote_code)
         return
 
     def generate(self, prompts: Union[str, List[str]], **kwargs) -> str:

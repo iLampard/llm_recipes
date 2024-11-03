@@ -5,7 +5,7 @@ import argparse
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load various LLMs and generate answers")
     parser.add_argument("--config_dir",
-                        default='llava_gen.yaml',
+                        default='cpm_gen.yaml',
                         help="Path to configuration file in yaml format")
     parser.add_argument("--output_dir", help="Path to save the output JSON file")
     args = parser.parse_args()
@@ -14,6 +14,10 @@ if __name__ == "__main__":
 
     model = LLM.build_from_config(config)
 
-    prompt = "<image>\nWhat's the content of the image?"
-    image_path = 'cloth.png'
-    print(model.generate(prompt, image_path=image_path, image_format='png'))
+    if model.model_name == 'llava':
+        prompt = "<image>\nWhat's the content of the image?"
+    else:
+        prompt = "What's the content of the image?"
+    image_dir = 'cloth.png'
+
+    print(model.generate(prompt, image_dir=image_dir, image_format='png'))

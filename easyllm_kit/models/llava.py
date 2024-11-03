@@ -80,7 +80,7 @@ class Llava(LLM):
         inputs = self.processor(text=input_prompts, images=images, return_tensors="pt")
 
         # Generate
-        generate_ids = self.model.generate(**inputs, max_length=30)
+        generate_ids = self.model.generate(**inputs, max_length=self.generation_config.max_length)
         output = self.processor.batch_decode(generate_ids, 
                                              skip_special_tokens=True, 
                                              clean_up_tokenization_spaces=False)[0]

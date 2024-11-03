@@ -305,6 +305,10 @@ class ModelArguments(QuantizationArguments, ProcessorArguments, ExportArguments,
         init=False,
         metadata={"help": "Whether use block diag attention or not, derived from `neat_packing`. Do not specify it."},
     )
+    trust_remote_code: bool = field(
+        default=True,
+        metadata={"help": "Whether to trust remote code when loading models from Hugging Face."},
+    )
 
     def __post_init__(self):
         if self.model_dir is None and not self.use_api:
