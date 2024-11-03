@@ -49,8 +49,8 @@ class Llava(LLM):
             prompts = [prompts]  # Convert single string to list
         
         # Decode base64 images to PIL Image format
-        image_format = self.kwargs.get('image_format', 'base64')
-        image_paths = self.kwargs.get('image_paths', None)
+        image_format = kwargs.get('image_format', 'base64')
+        image_paths = kwargs.get('image_paths', None)
         if image_format == 'base64':
             images = [Image.open(io.BytesIO(base64.b64decode(b64_str))) for b64_str in base64_images]
         else:

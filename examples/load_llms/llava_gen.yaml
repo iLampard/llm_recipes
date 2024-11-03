@@ -1,0 +1,15 @@
+config_cls_name: llm_config
+
+model:
+  model_name: llava
+  use_api: false
+  model_dir: /workspaces/data/cache/huggingface/hub/models--intel--llava-gemma-2b
+  use_vllm: true
+  tensor_parallel_size: 4
+
+generation:
+  temperature: 0.3
+  top_p: 0.9
+  repetition_penalty: 1.1
+
+
