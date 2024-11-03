@@ -101,7 +101,6 @@ class Llama3(LLM):
                 device_map=self.model_config.device_map
             )
             self.tokenizer = AutoProcessor.from_pretrained(self.model_config.model_dir)
-            print('load llama-3.2')
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(
                 self.model_config.model_dir,
