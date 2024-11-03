@@ -1,19 +1,14 @@
-
 from PIL import Image
+from transformers import AutoModel, AutoTokenizer
 from typing import Union, List
-from transformers import (
-  LlavaForConditionalGeneration,
-  AutoProcessor
-)
 import io
 import base64
-
 from easyllm_kit.models.base import LLM
 
 
-@LLM.register('llava')
-class Llava(LLM):
-    model_name = 'llava'
+@LLM.register('minicpm')
+class MiniCPM(LLM):
+    model_name = 'minicpm'
 
     def __init__(self, config):
         self.model_config = config['model_config']
@@ -22,12 +17,12 @@ class Llava(LLM):
         self.load_model()
 
     def load_model(self):
-        self.model = LlavaForConditionalGeneration.from_pretrained(self.model_config.model_dir,            
-                                                                    torch_dtype=self.model_config.infer_dtype,
-                device_map=self.model_config.device_map)
-        self.processor = AutoProcessor.from_pretrained(self.model_config.model_dir)
-        return 
-    
+        self.model = AutoModel.from_pretrained(self.model_config.model_dir,
+                                               torch_dtype=self.model_config.infer_dtype,
+                                               device_map=self.model_config.device_map)
+        self.processor = AutoTokenizer.from_pretrained(self.model_config.model_dir)
+        return
+
     def generate(self, prompts: Union[str, List[str]], **kwargs) -> str:
         """
         Generate text based on the input prompt.
@@ -49,7 +44,7 @@ class Llava(LLM):
         # Ensure prompts is a list
         if isinstance(prompts, str):
             prompts = [prompts]  # Convert single string to list
-        
+
         # Decode base64 images to PIL Image format
         image_format = kwargs.get('image_format', 'base64')
         image_dir = kwargs.get('image_dir', None)
@@ -63,26 +58,23 @@ class Llava(LLM):
                 raise ValueError("image_dir must be a string or a list of strings.")
 
             if image_format == 'base64':
-                images = [Image.open(io.BytesIO(base64.b64decode(b64_str))) for b64_str in image_dir]
+                images = [Image.open(io.BytesIO(base64.b64decode(b64_str))).convert('RGB') for b64_str in image_dir]
             else:
-                images = [Image.open(image) for image in image_dir]
+                images = [Image.open(image).convert('RGB') for image in image_dir]
 
-
-        # Prepare prompts using the template
-        input_prompts = [
-            self.processor.tokenizer.apply_chat_template(
-                [{'role': 'user', 'content': text}],
-                tokenize=False,
-                add_generation_prompt=True
-            ) for text in prompts
+        # Prepare batch messages
+        msgs_batch = [
+            [{'role': 'user', 'content': [image, question]}]
+            for image, question in zip(images, prompts)
         ]
 
-        inputs = self.processor(text=input_prompts, images=images, return_tensors="pt")
-
-        # Generate
-        generate_ids = self.model.generate(**inputs, max_length=30)
-        output = self.processor.batch_decode(generate_ids, 
-                                             skip_special_tokens=True, 
-                                             clean_up_tokenization_spaces=False)[0]
-        return output
-
+        # Process each input in the batch
+        results = []
+        for msgs in msgs_batch:
+            res = self.model.chat(
+                image=None,
+                msgs=msgs,
+                tokenizer=self.processor
+            )
+            results.append(res)
+        return results if len(results) > 1 else results[0]
