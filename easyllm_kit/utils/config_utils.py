@@ -2,6 +2,8 @@ import ast
 import os
 from datetime import datetime
 from typing import Any
+import time
+from functools import wraps
 
 
 def make_json_compatible_value(value):
@@ -55,6 +57,37 @@ def generate_output_dir(base_dir, exp_name, **kwargs):
         temp_str += f'{k}-{v}'
     temp_str += timestamp
     return os.path.join(output_dir, temp_str)
+
+
+def measure_time(logger=None):
+    """
+    A decorator to measure the time taken by a function to execute in seconds.
+    If a logger is provided, it logs the time; otherwise, it prints to the console.
+
+    Usage:
+    @measure_time(logger=your_logger)
+    def your_function():
+        # Your code
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            start_time = time.time()  # Start the timer
+            result = func(*args, **kwargs)  # Call the function
+            elapsed_time = time.time() - start_time  # Calculate the time difference
+            message = f"Time taken by '{func.__name__}': {elapsed_time:.4f} seconds"
+
+            if logger:
+                logger.info(message)
+            else:
+                print(message)
+
+            return result
+
+        return wrapper
+
+    return decorator
 
 # @Config.register('train_experiment_config')
 # class TrainConfig(Config):
