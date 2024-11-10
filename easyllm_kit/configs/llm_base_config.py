@@ -143,9 +143,6 @@ class ModelArguments(QuantizationArguments, ProcessorArguments, ExportArguments,
     api_key: Optional[str] = field(default=None, metadata={'help': 'API key for accessing the model if using an API.'})
     api_url: Optional[str] = field(default=None, metadata={'help': 'API URL for accessing the model if using an API.'})
 
-    is_multimodal: bool = field(default=False,
-                                metadata={'help': 'Flag to indicate if the model is multimodal.'})
-
     use_litellm_api: bool = field(default=False, metadata={
         'help': 'Flag to indicate if the model should be accessed via litellm API.'})
 
