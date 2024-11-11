@@ -118,6 +118,7 @@ class LlamaVis(LLM):
                     ).to(self.model.device)
                 else:
                     inputs = self.processor(
+                        None,
                         input_text,
                         return_tensors="pt",
                         add_special_tokens=False

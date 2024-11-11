@@ -21,7 +21,7 @@
 	"runArgs": ["--name", "${localEnv:USER}_dev"],
 
     "mounts": [
-        "source=/data0/,target=/workspaces/data0/,type=bind"
+        "source=/data/,target=/workspaces/data/,type=bind"
     ]
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
