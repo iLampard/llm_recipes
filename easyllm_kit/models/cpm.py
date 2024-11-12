@@ -4,6 +4,9 @@ from typing import Union, List
 import io
 import base64
 from easyllm_kit.models.base import LLM
+import torch
+
+logger = get_logger('easyllm_kit')
 
 
 @LLM.register('minicpm')
@@ -17,12 +20,86 @@ class MiniCPM(LLM):
         self.load_model()
 
     def load_model(self):
-        self.model = AutoModel.from_pretrained(self.model_config.model_dir,
-                                               torch_dtype=self.model_config.infer_dtype,
-                                               trust_remote_code=self.model_config.trust_remote_code)
-        self.model = self.model.eval().to(self.model_config.device)
-        self.processor = AutoTokenizer.from_pretrained(self.model_config.model_dir,
-                                                       trust_remote_code=self.model_config.trust_remote_code)
+        from accelerate import init_empty_weights, infer_auto_device_map, load_checkpoint_in_model, dispatch_model
+
+        # Get available GPU devices
+        if torch.cuda.is_available():
+            gpu_device_ids = list(range(torch.cuda.device_count()))
+            logger.info(f"Found {len(gpu_device_ids)} GPU devices: {gpu_device_ids}")
+        else:
+            logger.warning("No GPU devices found, using CPU")
+            gpu_device_ids = []
+
+        # Configure memory for each GPU
+        max_memory = None
+        if self.model_config.max_memory:
+            max_memory = {
+                device_id: self.model_config.max_memory.get(str(device_id), "24GiB")
+                for device_id in gpu_device_ids
+            }
+            if 'cpu' in self.model_config.max_memory:
+                max_memory['cpu'] = self.model_config.max_memory['cpu']
+
+        # Load model configuration
+        config = AutoModel.config_class.from_pretrained(
+            self.model_config.model_dir,
+            trust_remote_code=self.model_config.trust_remote_code
+        )
+
+        # Initialize empty model
+        with init_empty_weights():
+            model = AutoModel.from_config(
+                config,
+                torch_dtype=self.model_config.infer_dtype,
+                trust_remote_code=True
+            )
+
+        # Define modules that should not be split
+        no_split_module_classes = ["LlamaDecoderLayer"]
+
+        # Infer device map
+        device_map = infer_auto_device_map(
+            model,
+            max_memory=max_memory,
+            no_split_module_classes=no_split_module_classes
+        )
+
+        logger.info(f"Determined device map: {device_map}")
+
+        # Ensure critical layers are on the first GPU
+        device_map.update({
+            "llm.model.embed_tokens": 0,
+            "llm.model.layers.0": 0,
+            "llm.lm_head": 0,
+            "vpm": 0,
+            "resampler": 0
+        })
+
+        # Load checkpoint with device map
+        load_checkpoint_in_model(
+            model,
+            self.model_config.model_dir,
+            device_map=device_map
+        )
+
+        # Dispatch model across devices
+        self.model = dispatch_model(
+            model,
+            device_map=device_map
+        )
+
+        # Load tokenizer
+        self.processor = AutoTokenizer.from_pretrained(
+            self.model_config.model_dir,
+            trust_remote_code=self.model_config.trust_remote_code
+        )
+
+        # Set model to evaluation mode
+        torch.set_grad_enabled(False)
+        self.model.eval()
+
+        logger.info(f"Successfully loaded MiniCPM model across {len(gpu_device_ids)} GPUs")
+
         return
 
     def generate(self, prompts: Union[str, List[str]], **kwargs) -> str:

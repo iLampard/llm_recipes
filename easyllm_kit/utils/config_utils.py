@@ -89,33 +89,3 @@ def measure_time(logger=None):
 
     return decorator
 
-# @Config.register('train_experiment_config')
-# class TrainConfig(Config):
-#     @staticmethod
-#     def parse_from_yaml_config(config, **kwargs):
-#         experiment_name = kwargs.get('experiment_name')
-#         experiment_config = config.get(experiment_name, None)
-
-#         # setup the base config
-#         merged_experiment_config = config['defaults'].copy()
-
-#         # overwrite some config values
-#         for key, value in experiment_config.items():
-#             merged_experiment_config[key] = value
-
-#         output_dir = merged_experiment_config.get('output_dir', '')
-#         merged_experiment_config['output_dir'] = generate_output_dir(output_dir,
-#                                                                      experiment_name, **experiment_config)
-
-#         return merged_experiment_config
-
-#     @staticmethod
-#     def make_args_to_str(merged_experiment_config):
-#         params = []
-#         for key, value in merged_experiment_config.items():
-#             formatted_value = format_value(value)
-#             params.append(f"--{key} {formatted_value}")
-
-#         param_str = ' '.join(params)
-
-#         return param_str
