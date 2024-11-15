@@ -13,7 +13,7 @@ class Gemini(LLM):
             self.client = openai.OpenAI(api_key=self.model_config.api_key,
                                         base_url=self.model_config.api_url)
         else:
-            self.client = openai.OpenAI(api_key=self.model_config.api_key)
+            raise NotImplementedError
 
     def generate(self, prompt: str, **kwargs):
         completion = self.client.chat.completions.create(
