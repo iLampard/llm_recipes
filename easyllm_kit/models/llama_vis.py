@@ -8,6 +8,7 @@ import io
 
 logger = get_logger('easyllm_kit')
 
+
 # ref: https://huggingface.co/meta-llama/Llama-3.2-11B-Vision-Instruct
 
 @LLM.register('llama_vis')
@@ -40,27 +41,27 @@ class LlamaVis(LLM):
     def prepare_inputs(self, prompts: List[str], images: List[Image.Image] = None) -> List[Dict]:
         """Prepare inputs for the model."""
         batch_messages = []
-        
+
         for idx, text in enumerate(prompts):
             message = {
                 "role": "user",
                 "content": []
             }
-            
+
             # Add image if available
             if images and idx < len(images):
                 message["content"].append({
                     "type": "image",
                 })
-            
+
             # Add text
             message["content"].append({
                 "type": "text",
                 "text": text
             })
-            
+
             batch_messages.append([message])
-        
+
         return batch_messages
 
     def generate(self, prompts: Union[str, List[str]], **kwargs) -> Union[str, List[str]]:
@@ -89,7 +90,7 @@ class LlamaVis(LLM):
         if image_dir is not None:
             if isinstance(image_dir, str):
                 image_dir = [image_dir]
-            
+
             image_format = kwargs.get('image_format', 'base64')
             try:
                 if image_format == 'base64':
@@ -102,7 +103,7 @@ class LlamaVis(LLM):
 
         # Prepare batch inputs
         batch_messages = self.prepare_inputs(prompts, images)
-        
+
         # Process each batch
         generated_texts = []
         for idx, messages in enumerate(batch_messages):

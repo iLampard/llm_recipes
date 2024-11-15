@@ -26,7 +26,6 @@ class Llama3(LLM):
         # Initialize vllm inference
         if self.model_config.use_vllm:
             from vllm import LLM as vLLM
-            print(self.model_config.tensor_parallel_size)
             self.model = vLLM(model=self.model_config.model_dir,
                               tensor_parallel_size=self.model_config.tensor_parallel_size)
             self.tokenizer = self.model.get_tokenizer()
