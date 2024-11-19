@@ -21,7 +21,7 @@ class GenerateResponse(BaseModel):
     status: str = "success"
     error: Optional[str] = None
 
-def create_app(config_dir: str) -> FastAPI:
+def create_app(config_dir: str, context_prompt: Optional[str] = None) -> FastAPI:
     """
     Create a FastAPI application that serves the LLM model.
 
@@ -57,9 +57,13 @@ def create_app(config_dir: str) -> FastAPI:
             if request.image_dir is not None:
                 generation_params['image_dir'] = request.image_dir
                 generation_params['image_format'] = request.image_format
+            
+            
+            if context_prompt is not None:
+                prompts = [context_prompt + p for p in request.prompts]
 
             generated_text = model.generate(
-                prompts=request.prompts,
+                prompts=prompts,
                 **generation_params
             )
 

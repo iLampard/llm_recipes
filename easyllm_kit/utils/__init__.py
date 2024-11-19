@@ -8,7 +8,9 @@ from easyllm_kit.utils.data_utils import (
     read_json,
     save_json,
     download_data_from_hf,
-    sample_json_records
+    sample_json_records,
+    process_base64_image,
+    extract_json_from_text
 )
 from easyllm_kit.utils.hf_utils import HFHelper
 from easyllm_kit.utils.config_utils import make_json_compatible_value, convert_str_2_list_or_float, measure_time
@@ -24,6 +26,8 @@ __all__ = [
     'download_data_from_hf',
     'HFHelper',
     'sample_json_records',
+    'process_base64_image',
+    'extract_json_from_text',
     'make_json_compatible_value',
     'measure_time',
     'convert_str_2_list_or_float',

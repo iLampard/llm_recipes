@@ -2,6 +2,7 @@ import base64
 import json
 import os
 import random
+import re
 from pathlib import Path
 
 from PIL import Image
@@ -9,6 +10,34 @@ from io import BytesIO
 from typing import Union, List, Dict, Any, Optional
 
 from datasets import load_dataset
+
+
+def process_base64_image(base64_string, output_path, save_format='PNG'):
+    """
+    Process a base64 encoded image string and save it as PNG.
+
+    Args:
+        base64_string (str): The base64 encoded image string
+        output_path (str): Path where to save the PNG file
+        save_format (str): Format to save the PNG file
+
+    Returns:
+        str: Path to the saved image if successful, None if failed
+    """
+    try:
+        # Decode base64 string to bytes
+        image_data = base64.b64decode(base64_string)
+
+        # Convert bytes to PIL Image
+        image = Image.open(BytesIO(image_data))
+
+        # Save image as PNG
+        image.save(output_path, save_format)
+
+        return output_path
+    except Exception as e:
+        print(f"Error processing image: {e}")
+        return None
 
 
 def image_to_base64(image: Image.Image) -> str:
@@ -91,6 +120,35 @@ def sample_json_records(
         save_json(sampled_data, output_file)
 
     return sampled_data
+
+
+def extract_json_from_text(text: str):
+    """
+    Extract and format the JSON object from a given text.
+
+    Args:
+        text (str): The input text containing a JSON object.
+
+    Returns:
+        dict: The extracted JSON object as a dictionary, or {'intention': 'error parsing'} if an error occurs.
+    """
+    try:
+        # Use regex to find the JSON part in the text
+        json_match = re.search(r'```json\s*\{.*?\}\s*```', text, re.DOTALL)
+        if not json_match:
+            raise ValueError("No JSON found in the provided text.")
+
+        # Extract the JSON string and clean it
+        json_str = json_match.group()
+        json_str = json_str.replace('```json', '').replace('```', '').strip()
+
+        # Parse the JSON string to a dictionary
+        json_dict = json.loads(json_str)
+        return json_dict
+    except (json.JSONDecodeError, ValueError) as e:
+        print(f"Error parsing JSON: {e}")
+        print(text)
+        return {'intention': 'error parsing'}
 
 
 def convert_to_json_list(dataset):
