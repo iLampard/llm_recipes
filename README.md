@@ -48,7 +48,7 @@ generation:
   repetition_penalty: 1.1
 ```
 
-Then we can load the model and generate text with it.
+Then we can load the model and generate text with an optional image (cloth.png).
 ```python
 from easyllm_kit.models import LLM
 from easyllm_kit.configs import Config
@@ -59,7 +59,7 @@ model_config = Config.build_from_yaml_file('config.yaml')
 model = LLM.build_from_config(model_config)
 
 # Generate text
-response = model.generate('whats the content of the image?', image='cloth.png'))
+response = model.generate('whats the content of the image?', image='cloth.png')
 print(response)
 # The image shows a person wearing a black skirt. Below the skirt, there are color options displayed, including black, white, light blue, and green.
 ```
