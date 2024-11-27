@@ -20,6 +20,7 @@ class Gemini(LLM):
             model=kwargs.get('model_name', 'gemini-1.5-pro-002'),
             max_tokens=self.generation_config.max_length,
             temperature=self.generation_config.temperature,
+            top_p=self.generation_config.top_p,
             messages=[
                 {"role": "user", "content": prompt}
             ]

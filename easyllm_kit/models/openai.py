@@ -1,6 +1,6 @@
 from easyllm_kit.models.base import LLM
-
-
+import base64
+from easyllm_kit.utils.data_utils import read_image_as_bytes
 @LLM.register('gpt4o')
 class GPT4o(LLM):
     model_name = 'gpt4o'
@@ -16,12 +16,13 @@ class GPT4o(LLM):
             self.client = openai.OpenAI(api_key=self.model_config.api_key)
 
     def generate(self, prompt: str, **kwargs):
+        prompt_ = self.format_prompt_with_image(prompt, kwargs.get('image'))    
         completion = self.client.chat.completions.create(
             model=kwargs.get('model_name', 'gpt-4o'),
             max_tokens=self.generation_config.max_length,
             temperature=self.generation_config.temperature,
             messages=[
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": prompt_}
             ]
         )
         return completion.choices[0].message.content

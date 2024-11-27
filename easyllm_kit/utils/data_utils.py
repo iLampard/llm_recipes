@@ -40,15 +40,10 @@ def process_base64_image(base64_string, output_path, save_format='PNG'):
         return None
 
 
-def image_to_base64(image: Image.Image) -> str:
-    """
-    Convert image to base64 format
-    """
-    if image.mode != 'RGB':
-        image = image.convert('RGB')
-    buffered = BytesIO()
-    image.save(buffered, format="JPEG")
-    return base64.b64encode(buffered.getvalue()).decode("utf-8")
+def read_image_as_bytes(image_path):
+    """Read an image file and return its bytes."""
+    with open(image_path, "rb") as image_file:
+        return image_file.read()  # Read the image as bytes
 
 
 def save_json(data: Union[List, dict], filename: str) -> None:
