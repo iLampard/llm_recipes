@@ -59,8 +59,9 @@ model_config = Config.build_from_yaml_file('config.yaml')
 model = LLM.build_from_config(model_config)
 
 # Generate text
-response = model.generate('hello')
+response = model.generate('whats the content of the image?', image='cloth.png'))
 print(response)
+# The image shows a person wearing a black skirt. Below the skirt, there are color options displayed, including black, white, light blue, and green.
 ```
 
 #### Load llama3.1 from local directory
