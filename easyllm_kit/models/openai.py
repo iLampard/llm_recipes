@@ -23,6 +23,8 @@ class GPT4o(LLM):
             model=kwargs.get("model_name", "gpt-4o"),
             max_tokens=self.generation_config.max_length,
             temperature=self.generation_config.temperature,
+            top_p=self.generation_config.top_p,
+            repetition_penalty=self.generation_config.repetition_penalty,
             messages=[{"role": "user", "content": prompt_}],
         )
         return completion.choices[0].message.content
