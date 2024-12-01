@@ -58,12 +58,8 @@ def create_app(config_dir: str, context_prompt: Optional[str] = None) -> FastAPI
                 generation_params['image_dir'] = request.image_dir
                 generation_params['image_format'] = request.image_format
             
-            
-            if context_prompt is not None:
-                prompts = [context_prompt + p for p in request.prompts]
-
             generated_text = model.generate(
-                prompts=prompts,
+                prompts=request.prompts,
                 **generation_params
             )
 
@@ -116,11 +112,29 @@ def make_request(url: str, request_data: Dict) -> Dict:
         if not url.endswith('/generate'):
             url = url.rstrip('/') + '/generate'
 
+        # Handle image encoding if present
+        if request_data.get('image_dir'):
+            import base64
+            from easyllm_kit.utils import read_image_as_bytes
+            
+            # Handle single image or list of images
+            if isinstance(request_data['image_dir'], str):
+                image_data = read_image_as_bytes(request_data['image_dir'])
+                request_data['image_dir'] = base64.b64encode(image_data).decode('utf-8')
+            elif isinstance(request_data['image_dir'], list):
+                encoded_images = []
+                for img_path in request_data['image_dir']:
+                    image_data = read_image_as_bytes(img_path)
+                    encoded_images.append(base64.b64encode(image_data).decode('utf-8'))
+                request_data['image_dir'] = encoded_images
+
+            request_data['image_format'] = 'base64'
+
         # Make the POST request
         response = requests.post(
             url,
             json=request_data,
-            timeout=30  # 30 seconds timeout
+            timeout=30
         )
         
         # Check if the request was successful
