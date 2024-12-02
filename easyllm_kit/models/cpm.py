@@ -168,8 +168,6 @@ class MiniCPM(LLM):
         if use_vllm:    
             stop_tokens = ['<|im_end|>', '<|endoftext|>']
             stop_token_ids = [self.tokenizer.convert_tokens_to_ids(i) for i in stop_tokens]
-
-            msgs_batch = []
             if images:
                 msgs_batch = [
                     [{'role': 'user', 'content': f'(<image>./</image>)\n{question}'}]
@@ -183,7 +181,6 @@ class MiniCPM(LLM):
             return msgs_batch, stop_token_ids
         else:
             # Prepare batch messages
-            msgs_batch = []
             if images:
                 # Case with images
                 msgs_batch = [

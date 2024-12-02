@@ -40,10 +40,39 @@ def process_base64_image(base64_string, output_path, save_format='PNG'):
         return None
 
 
-def read_image_as_bytes(image_path):
-    """Read an image file and return its bytes."""
-    with open(image_path, "rb") as image_file:
-        return image_file.read()  # Read the image as bytes
+def read_image_as_bytes(image_path, target_size=(448, 448)):
+    """Read and preprocess image file and return bytes.
+    
+    Args:
+        image_path (str): Path to the image file
+        target_size (tuple): Target size for the image (height, width)
+        
+    Returns:
+        bytes: Preprocessed image as bytes
+    """
+    try:
+        # Read image
+        if isinstance(image_path, str):
+            image = Image.open(image_path)
+        elif hasattr(image_path, 'read'):
+            image = Image.open(image_path)
+        else:
+            raise ValueError("Image must be either a file path string or a file-like object")
+
+        # Convert to RGB if needed
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        
+        # Resize image
+        image = image.resize(target_size, Image.Resampling.LANCZOS)
+        
+        # Convert to bytes
+        buffer = BytesIO()
+        image.save(buffer, format='JPEG', quality=95)
+        return buffer.getvalue()
+        
+    except Exception as e:
+        raise ValueError(f"Error processing image: {str(e)}")
 
 
 def save_json(data: Union[List, dict], filename: str) -> None:
