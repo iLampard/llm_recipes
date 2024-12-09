@@ -11,7 +11,7 @@ class Config(Registrable):
         """Load yaml config file from disk.
 
         Args:
-            yaml_fn (str): Path of the yaml config file.
+            yaml_dir (str): Path of the yaml config file.
 
         Returns:
             Config: Config object corresponding to cls.

@@ -309,7 +309,7 @@ class ModelArguments(QuantizationArguments, ProcessorArguments, ExportArguments,
 
     def __post_init__(self):
         if self.model_dir is None and not self.use_api:
-            raise ValueError("Please provide `model_path`.")
+            raise ValueError("Please provide `model_dir`.")
 
         if self.split_special_tokens and self.use_fast_tokenizer:
             raise ValueError("`split_special_tokens` is only supported for slow tokenizers.")

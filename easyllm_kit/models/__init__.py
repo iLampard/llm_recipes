@@ -6,6 +6,7 @@ from easyllm_kit.models.claude import Claude35Sonnet
 from easyllm_kit.models.llava import Llava
 from easyllm_kit.models.cpm import MiniCPM
 from easyllm_kit.models.gemini import Gemini
+from easyllm_kit.models.flan import FlanT5
 
 __all__ = ['LLM',
            'GPT4o',
@@ -14,4 +15,5 @@ __all__ = ['LLM',
            'Claude35Sonnet',
            'Llava',
            'MiniCPM',
-           'Gemini']
+           'Gemini',
+           'FlanT5']
