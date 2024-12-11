@@ -3,6 +3,8 @@ import json
 import os
 import random
 import re
+from enum import Enum
+from dataclasses import is_dataclass, asdict
 from pathlib import Path
 
 from PIL import Image
@@ -77,7 +79,7 @@ def read_image_as_bytes(image_path, target_size=(448, 448)):
 
 def convert_to_dict(obj: Any, seen: set = None) -> Any:
     """
-    Convert OmegaConf objects and other complex types to JSON-serializable format.
+    Convert complex objects to JSON-serializable format with simplified output.
 
     Args:
         obj: Object to convert
@@ -92,21 +94,64 @@ def convert_to_dict(obj: Any, seen: set = None) -> Any:
     # Avoid processing the same object multiple times
     obj_id = id(obj)
     if obj_id in seen:
-        return str(obj)  # or return None, or raise an error, depending on your needs
+        return str(obj)
     seen.add(obj_id)
 
+    # Handle different types
     if OmegaConf.is_config(obj):
         return OmegaConf.to_container(obj, resolve=True)
-    elif hasattr(obj, '__dict__'):
-        return {k: convert_to_dict(v, seen) for k, v in obj.__dict__.items()}
+    elif isinstance(obj, Enum):
+        return obj.value  # Just return the enum value
+    elif is_dataclass(obj):
+        return {k: convert_to_dict(v, seen) for k, v in asdict(obj).items()}
     elif isinstance(obj, (list, tuple)):
         return [convert_to_dict(item, seen) for item in obj]
     elif isinstance(obj, dict):
-        return {k: convert_to_dict(v, seen) for k, v in obj.items()}
+        return {
+            k: convert_to_dict(v, seen)
+            for k, v in obj.items()
+            if not k.startswith('_')  # Skip private attributes
+        }
+    elif hasattr(obj, '__dict__'):
+        return {
+            k: convert_to_dict(v, seen)
+            for k, v in obj.__dict__.items()
+            if not k.startswith('_')  # Skip private attributes
+               and not callable(v)  # Skip methods
+        }
     elif isinstance(obj, (int, float, str, bool, type(None))):
         return obj
     else:
-        return str(obj)  # Convert unknown types to string
+        return str(obj)
+
+
+def clean_config(config: Dict) -> Dict:
+    """
+    Clean configuration dictionary by removing unnecessary fields.
+
+    Args:
+        config: Configuration dictionary to clean
+
+    Returns:
+        Cleaned configuration dictionary
+    """
+    # List of keys to exclude
+    exclude_keys = {
+        '_name_', '_value_', '__objclass__', '_member_names_',
+        '_member_map_', '_member_type_', '_value2member_map_',
+        '__new__', '__doc__', '_generate_next_value_'
+    }
+
+    def _clean_dict(d: Dict) -> Dict:
+        if not isinstance(d, dict):
+            return d
+        return {
+            k: _clean_dict(v) if isinstance(v, dict) else v
+            for k, v in d.items()
+            if k not in exclude_keys and not k.startswith('_')
+        }
+
+    return _clean_dict(config)
 
 
 def save_json(data: Any, filename: str) -> None:
@@ -120,9 +165,12 @@ def save_json(data: Any, filename: str) -> None:
     # Convert data to JSON-serializable format
     serializable_data = convert_to_dict(data)
 
+    # Clean the configuration
+    cleaned_data = clean_config(serializable_data)
+
     # Save to JSON file
     with open(filename, "w", encoding="utf-8") as f:
-        json.dump(serializable_data, f, ensure_ascii=False, indent=4)
+        json.dump(cleaned_data, f, ensure_ascii=False, indent=4)
 
 
 def read_json(filename: str) -> Union[List, dict]:

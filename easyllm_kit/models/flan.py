@@ -11,6 +11,7 @@ class FlanT5(LLM):
 
     def __init__(self, config):
         self.model_config = config['model_config']
+        self.generation_config = config['generation_config']
         self.model = None  # Initialize model attribute
         self.load_model()
 

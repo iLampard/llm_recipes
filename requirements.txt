@@ -9,4 +9,5 @@ openai
 numpy
 rouge_score
 colorama
-dictdatabse
+# Install this dependency without dependencies manually:
+# pip install dictdatabase --no-deps
