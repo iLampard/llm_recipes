@@ -11,7 +11,7 @@ logger = get_logger('easyllm_kit')
 
 
 @LLM.register('gemma2')
-class Gemma(LLM):
+class Gemma2(LLM):
     model_name = 'gemma2'
 
     def __init__(self, config):

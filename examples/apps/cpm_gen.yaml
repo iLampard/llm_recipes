@@ -4,7 +4,6 @@ model:
   model_name: minicpm
   use_api: false
   model_dir: /workspaces/data/cache/huggingface/hub/models--openbmb-minicpm-v-2_6
-  device_map: [0, 1]
 
 generation:
   temperature: 0.3
