@@ -21,7 +21,8 @@ class LLM(Registrable):
     def __call__(self, prompt: str, **kwargs) -> str:
         return self.generate(prompt, **kwargs)
 
-    def format_prompt_with_image(self, prompt: str, image=None):
+    @staticmethod
+    def format_prompt_with_image(prompt: str, image=None):
         """Format prompt with optional image for LiteLLM compatible APIs."""
 
         prompt_ = [

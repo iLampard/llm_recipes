@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import pathlib
 import random
 import re
 from enum import Enum
@@ -12,6 +13,14 @@ from io import BytesIO
 from typing import Union, List, Dict, Any, Optional
 from omegaconf import OmegaConf
 from datasets import load_dataset
+
+
+def ensure_dir(path: str, is_file=True):
+    if is_file:
+        pathlib.Path(path).parent.mkdir(parents=True, exist_ok=True)
+    else:
+        pathlib.Path(path).mkdir(parents=True, exist_ok=True)
+    return
 
 
 def process_base64_image(base64_string, output_path, save_format='PNG'):
@@ -265,12 +274,20 @@ def extract_json_from_text(text: str):
     try:
         # Use regex to find the JSON part in the text
         json_match = re.search(r'```json\s*\{.*?\}\s*```', text, re.DOTALL)
+
         if not json_match:
             raise ValueError("No JSON found in the provided text.")
 
         # Extract the JSON string and clean it
         json_str = json_match.group()
         json_str = json_str.replace('```json', '').replace('```', '').strip()
+
+        # Remove comments (anything after // on a line)
+        json_str = re.sub(r'//.*', '', json_str)
+
+        # Clean up the JSON string
+        # Remove any control characters that might interfere with parsing
+        json_str = re.sub(r'[\x00-\x1F\x7F]', '', json_str)
 
         # Parse the JSON string to a dictionary
         json_dict = json.loads(json_str)
@@ -279,20 +296,6 @@ def extract_json_from_text(text: str):
         print(f"Error parsing JSON: {e}")
         print(text)
         return {'intention': 'error parsing'}
-
-
-def convert_to_json_list(dataset):
-    """
-    Convert data in Dataset format to list format
-    """
-    json_list = []
-    for sample in dataset:
-        sample_dict = dict(sample)
-        for key, value in sample_dict.items():
-            if isinstance(value, Image.Image):
-                sample_dict[key] = image_to_base64(value)
-        json_list.append(sample_dict)
-    return json_list
 
 
 def download_data_from_hf(
