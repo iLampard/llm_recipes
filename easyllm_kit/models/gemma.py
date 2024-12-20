@@ -1,5 +1,5 @@
 from PIL import Image
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer
 from typing import Union, List
 import io
 import base64
@@ -23,7 +23,8 @@ class Gemma2(LLM):
     def load_model(self):
         # Load model and tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_config.model_dir, trust_remote_code=True)
-        self.model = AutoModel.from_pretrained(self.model_config.model_dir, trust_remote_code=True).to(self.model_config.device)
+        self.model = AutoModelForCausalLM.from_pretrained(self.model_config.model_dir, trust_remote_code=True).to(
+            self.model_config.device)
 
         # Set model to evaluation mode
         torch.set_grad_enabled(False)
@@ -50,56 +51,28 @@ class Gemma2(LLM):
         if isinstance(prompts, str):
             prompts = [prompts]  # Convert single string to list
 
-        # Decode base64 images to PIL Image format
-        image_format = kwargs.get('image_format', 'base64')
-        image_dir = kwargs.get('image_dir', None)
-        images = None
+        inputs = self.tokenizer(
+            prompts,
+            padding=True,
+            truncation=True,
+            return_tensors="pt"
+        )
 
-        # Ensure image_dir is a list
-        if image_dir is not None:
-            if isinstance(image_dir, str):
-                image_dir = [image_dir]  # Convert single string to list
-            elif not isinstance(image_dir, list):
-                raise ValueError("image_dir must be a string or a list of strings.")
-            try:
-                if image_format == 'base64':
-                    images = [Image.open(io.BytesIO(base64.b64decode(b64_str))).convert('RGB') for b64_str in image_dir]
-                else:
-                    images = [Image.open(image).convert('RGB') for image in image_dir]
-            except Exception as e:
-                logger.error(f"Error loading images: {e}")
-                images = None
+        # Move inputs to the specified device
+        inputs = {key: value.to(self.model_config.device) for key, value in inputs.items()}
 
-        msgs_batch, stop_token_ids = self._prepare_input(prompts, images)
+        outputs = self.model.generate(
+            **inputs,
+            do_sample=self.generation_config.do_sample,
+            max_new_tokens=self.generation_config.max_new_tokens,
+            temperature=self.generation_config.temperature,
+            top_p=self.generation_config.top_p,
+            top_k=self.generation_config.top_k,
+            num_beams=self.generation_config.num_beams,
+            repetition_penalty=self.generation_config.repetition_penalty,
+            length_penalty=self.generation_config.length_penalty
+        )
 
-        results = self._generate(msgs_batch, images, stop_token_ids)
+        generated_text = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
 
-        return results
-
-    def _prepare_input(self, prompts, images):
-        # Prepare batch messages
-        if images:
-            # Case with images
-            msgs_batch = [
-                [{'role': 'user', 'content': [image, question]}]
-                for image, question in zip(images, prompts)
-            ]
-        else:
-            # Case without images (text-only)
-            msgs_batch = [
-                [{'role': 'user', 'content': question}]
-                for question in prompts
-            ]
-        return msgs_batch, None
-
-    def _generate(self, msgs_batch, images, stop_token_ids):
-        # Process each input in the batch
-        results = []
-        for msgs in msgs_batch:
-            res = self.model.chat(
-                image=None,
-                msgs=msgs,
-                tokenizer=self.tokenizer
-            )
-            results.append(res)
-        return results if len(results) > 1 else results[0]
+        return generated_text if len(generated_text) > 1 else generated_text[0]
