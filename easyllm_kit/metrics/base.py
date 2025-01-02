@@ -10,11 +10,11 @@ class Metrics(Registrable):
 @Metrics.register('accuracy')
 class Accuracy(Metrics):
     @staticmethod
-    def calculate(prediction, truth, force_lower=False) -> bool:
+    def calculate(prediction, truth, force_lower=True) -> float:
         if force_lower:
             prediction = prediction.lower()
             truth = truth.lower()
-        return prediction == truth
+        return 1.0 if prediction == truth else 0.0
 
 @Metrics.register('hit_ratio')
 class HitRatio(Metrics):
