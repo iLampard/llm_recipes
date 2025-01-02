@@ -82,6 +82,10 @@ def get_logger(name, log_file=None, log_level=logging.INFO, file_mode='w'):
 
     # only rank 0 will add a FileHandler
     if rank == 0 and log_file is not None:
+        # Create the directory for the log file if it doesn't exist
+        log_dir = os.path.dirname(os.path.abspath(log_file))
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
         # Here, the default behaviour of the official logger is 'a'. Thus, we
         # provide an interface to change the file mode to the default
         # behaviour.

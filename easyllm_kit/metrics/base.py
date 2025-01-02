@@ -1,140 +1,108 @@
 from typing import List, Union, Tuple
-
 import numpy as np
-from rouge_score import rouge_scorer
 from registrable import Registrable
-from sentence_transformers import SentenceTransformer
-import torch
-import sacrebleu
-
-sentence_transformer_model_cache = {}
-
 
 class Metrics(Registrable):
     @staticmethod
     def calculate(**kwargs):
         return NotImplementedError
 
-
 @Metrics.register('accuracy')
 class Accuracy(Metrics):
     @staticmethod
-    def calculate(prediction, truth) -> bool:
+    def calculate(prediction, truth, force_lower=False) -> bool:
+        if force_lower:
+            prediction = prediction.lower()
+            truth = truth.lower()
         return prediction == truth
-
 
 @Metrics.register('hit_ratio')
 class HitRatio(Metrics):
     @staticmethod
     def calculate(retrieved_int: List[int], truth: List[int], hit_num=3) -> float:
-        # in case truth is one integer value
         truth = truth if isinstance(truth, list) else [truth]
-        # Calculate the number of hits within the top 3 retrieved integers
         hit = len(set(truth).intersection(set(retrieved_int[:hit_num])))
-        # Normalize the hit count by the total number of truth integers to get the hit rate
         hit_rate = hit / len(truth)
         return hit_rate
-
 
 @Metrics.register('rouge_l')
 class ROUGE(Metrics):
     @staticmethod
     def calculate(generation: str, truth: str) -> float:
-        # Initialize the ROUGE scorer with the ROUGE-L metric
+        try:
+            from rouge_score import rouge_scorer
+        except ImportError:
+            raise ImportError("Please install rouge_score: pip install rouge_score")
+        
         scorer = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=True)
-        # Calculate the ROUGE scores between the generated text and the truth text
         scores = scorer.score(generation, truth)
-        # Extract and return the ROUGE-L F-measure score
         return scores["rougeL"].fmeasure
-
-
-def load_sentence_transformer_model(model_name: str) -> SentenceTransformer:
-    """
-    Loads a Sentence Transformer model by its name and moves it to the appropriate device.
-
-    Parameters:
-    - model_name (str): The name of the model to load.
-
-    Returns:
-    - SentenceTransformer: The loaded SentenceTransformer model.
-    """
-
-    global sentence_transformer_model_cache
-
-    # a model cache ensure we do not load the model on every call
-    if model_name not in sentence_transformer_model_cache:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        model = SentenceTransformer(model_name).to(device)
-        sentence_transformer_model_cache[model_name] = model
-
-    return sentence_transformer_model_cache[model_name]
-
 
 @Metrics.register('cosine_similarity')
 class CosSim(Metrics):
     @staticmethod
-    def calculate(generated_text: str, reference_texts: Union[str, List[str]],
-                  model_name):
-        # Load/Reference model
-        model = load_sentence_transformer_model(model_name)
+    def calculate(generated_text: str, reference_texts: Union[str, List[str]], model_name):
+        try:
+            from sentence_transformers import SentenceTransformer
+        except ImportError:
+            raise ImportError("Please install sentence_transformers: pip install sentence-transformers")
 
-        # Embedding for the generated text
+        # Load/Reference model
+        model = CosSim._load_sentence_transformer_model(model_name)
         generated_embedding = model.encode([generated_text])[0]
 
-        # Handling a single reference text
         if isinstance(reference_texts, str):
-            # Embedding for the single reference text
             reference_embedding = model.encode([reference_texts])[0]
-            # Compute cosine similarity
             similarity_score = np.dot(generated_embedding, reference_embedding) / (
                     np.linalg.norm(generated_embedding) * np.linalg.norm(reference_embedding))
-            # Ensure non-negative score
             return max(similarity_score, 0)
-
-        # Handling multiple reference texts
         else:
             similarity_scores = []
             for reference_text in reference_texts:
-                # Embedding for each reference text
                 reference_embedding = model.encode([reference_text])[0]
-                # Compute cosine similarity for each reference
                 individual_score = np.dot(generated_embedding, reference_embedding) / (
                         np.linalg.norm(generated_embedding) * np.linalg.norm(reference_embedding))
                 similarity_scores.append(individual_score)
-            # Calculate and ensure non-negative average score
             return max(np.mean(similarity_scores), 0)
 
+    @staticmethod
+    def _load_sentence_transformer_model(model_name: str):
+        """Cache for sentence transformer models"""
+        if not hasattr(CosSim, '_model_cache'):
+            CosSim._model_cache = {}
+        
+        if model_name not in CosSim._model_cache:
+            try:
+                from sentence_transformers import SentenceTransformer
+                import torch
+            except ImportError:
+                raise ImportError("Please install required packages: pip install sentence-transformers torch")
+            
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            model = SentenceTransformer(model_name).to(device)
+            CosSim._model_cache[model_name] = model
+        
+        return CosSim._model_cache[model_name]
 
 @Metrics.register('bleu')
 class BLEU(Metrics):
     @staticmethod
     def calculate(generated_text: str, reference_text: str, is_japanese: bool = False) -> float:
-        """
-        Calculates the BLEU score for a generated text compared to a reference truth text. This function supports
-        both general text and Japanese-specific evaluation by using the sacrebleu library.
+        try:
+            import sacrebleu
+        except ImportError:
+            raise ImportError("Please install sacrebleu: pip install sacrebleu")
 
-        Parameters:
-        - generated_text (str): The generated text to be evaluated.
-        - reference_text (str): The reference truth text.
-        - is_japanese (bool, optional): Flag to indicate whether the text is in Japanese, requiring special tokenization.
-
-        Returns:
-        - float: The BLEU score as a percentage (0 to 1 scale) for the generated text against the reference truth.
-        """
-
-        # Preprocess input texts
         generated_text = generated_text.lstrip("\n").rstrip("\n").split("\n")[0]
         reference = [reference_text.strip()]
 
-        # Compute BLEU score directly using sacrebleu
         if is_japanese:
-            bleu = sacrebleu.corpus_bleu([generated_text], [[ref] for ref in reference], tokenize='ja-mecab',
-                                         lowercase=True)
+            bleu = sacrebleu.corpus_bleu([generated_text], [[ref] for ref in reference], 
+                                       tokenize='ja-mecab', lowercase=True)
         else:
             bleu = sacrebleu.corpus_bleu([generated_text], [[ref] for ref in reference], lowercase=True)
 
         return bleu.score / 100
-
 
 @Metrics.register('f1')
 class F1(Metrics):
@@ -167,7 +135,6 @@ class F1(Metrics):
             return 0
         else:
             return 2 * precision * recall / (precision + recall)
-
 
 @Metrics.register('micro_f1')
 class MicroF1(Metrics):
@@ -205,7 +172,6 @@ class MicroF1(Metrics):
         false_negatives = len(normalized_ground_truth_entities) - true_positives
 
         return true_positives, false_positives, false_negatives
-
 
 @Metrics.register('ndcg')
 class NDCG(Metrics):

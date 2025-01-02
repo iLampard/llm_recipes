@@ -11,3 +11,7 @@ rouge_score
 colorama
 # Install this dependency without dependencies manually:
 # pip install dictdatabase --no-deps
+# Optional dependencies:
+# sentence-transformers  # Required for cosine similarity metric
+# sacrebleu            # Required for BLEU score metric
+# rouge_score          # Required for ROUGE metric
