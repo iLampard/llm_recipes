@@ -134,6 +134,42 @@ def convert_to_dict(obj: Any, seen: set = None) -> Any:
         return str(obj)
 
 
+def convert_for_tensorboard(obj: Any) -> dict:
+    """Convert config to tensorboard-compatible flat dictionary."""
+
+    def _is_tensorboard_compatible(v):
+        return isinstance(v, (int, float, str, bool))
+
+    def _convert_value(v):
+        if _is_tensorboard_compatible(v):
+            return v
+        return str(v)
+
+    def _flatten_dict(d: dict, parent_key: str = '', sep: str = '/') -> dict:
+        items = []
+        for k, v in d.items():
+            new_key = f"{parent_key}{sep}{k}" if parent_key else k
+            if isinstance(v, dict):
+                items.extend(_flatten_dict(v, new_key, sep=sep).items())
+            else:
+                items.append((new_key, _convert_value(v)))
+        return dict(items)
+
+    # First convert to regular dict
+    if OmegaConf.is_config(obj):
+        config_dict = OmegaConf.to_container(obj, resolve=True)
+    elif is_dataclass(obj):
+        config_dict = asdict(obj)
+    else:
+        config_dict = obj if isinstance(obj, dict) else vars(obj)
+
+    # Then flatten and convert values
+    flat_dict = _flatten_dict(config_dict)
+
+    # Filter out None values
+    return {k: v for k, v in flat_dict.items() if v is not None}
+
+
 def clean_config(config: Dict) -> Dict:
     """
     Clean configuration dictionary by removing unnecessary fields.

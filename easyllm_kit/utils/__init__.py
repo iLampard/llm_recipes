@@ -12,7 +12,9 @@ from easyllm_kit.utils.data_utils import (
     sample_json_records,
     process_base64_image,
     extract_json_from_text,
-    read_image_as_bytes
+    read_image_as_bytes,
+    convert_to_dict,
+    convert_for_tensorboard
 )
 from easyllm_kit.utils.hf_utils import HFHelper
 from easyllm_kit.utils.config_utils import make_json_compatible_value, convert_str_2_list_or_float, measure_time
@@ -35,5 +37,6 @@ __all__ = [
     'make_json_compatible_value',
     'measure_time',
     'convert_str_2_list_or_float',
-    'PromptTemplate'
+    'PromptTemplate',
+    'convert_to_dict'
 ]
