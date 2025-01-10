@@ -18,7 +18,7 @@
     },
     "postCreateCommand": "pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/",
 
-	"runArgs": ["--name", "${localEnv:USER}_dev"],
+	"runArgs": ["--name", "${localEnv:USER}_dev", "--gpus", "all"],
 
     "mounts": [
         "source=/data0/,target=/workspaces/data0/,type=bind"
