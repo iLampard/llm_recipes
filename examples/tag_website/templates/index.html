@@ -23,8 +23,8 @@
         }
         .image-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
             margin: 20px 0;
         }
         .image-item {
@@ -32,10 +32,14 @@
             padding: 10px;
             border-radius: 5px;
             background: white;
+            position: relative;
+        }
+        .image-item.tagged-good {
+            border: 3px solid #4CAF50;
         }
         .image-item img {
             width: 100%;
-            height: 300px;
+            height: 250px;
             object-fit: contain;
             margin-bottom: 10px;
         }
@@ -60,17 +64,24 @@
             cursor: pointer;
             border-radius: 4px;
         }
-        .pagination {
-            margin-top: 20px;
-            text-align: center;
+        .save-button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+            margin: 20px 0;
         }
-        .pagination a {
-            margin: 0 5px;
-            padding: 8px 16px;
-            text-decoration: none;
+        .tag-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
             background-color: #4CAF50;
             color: white;
-            border-radius: 4px;
+            padding: 5px 10px;
+            border-radius: 3px;
         }
     </style>
 </head>
@@ -81,19 +92,20 @@
         <div class="stats">
             <h3>Progress: {{ tagged_images }}/{{ total_images }} images tagged</h3>
             <p>Page {{ current_page }} of {{ total_pages }}</p>
+            <button class="save-button" onclick="saveTags()">Save Tags</button>
         </div>
 
         <div class="image-grid">
             {% for url in image_urls %}
-            <div class="image-item">
+            <div class="image-item" id="item-{{ loop.index }}">
                 <img src="{{ url }}" alt="Image" onerror="this.src='https://via.placeholder.com/400x300?text=Image+Load+Error'">
                 <div class="buttons">
-                    <button class="good" onclick="tagImage('{{ url }}', true)">Good</button>
-                    <button class="bad" onclick="tagImage('{{ url }}', false)">Bad</button>
+                    <button class="good" onclick="tagImage('{{ url }}', true, 'item-{{ loop.index }}')">Good</button>
+                    <button class="bad" onclick="tagImage('{{ url }}', false, 'item-{{ loop.index }}')">Bad</button>
                 </div>
                 {% if url in tags %}
-                <div style="text-align: center; margin-top: 5px;">
-                    Tagged as: {{ "Good" if tags[url] else "Bad" }}
+                <div class="tag-status">
+                    {{ "Good" if tags[url] else "Bad" }}
                 </div>
                 {% endif %}
             </div>
@@ -127,7 +139,7 @@
     </div>
 
     <script>
-        function tagImage(imageUrl, isGood) {
+        function tagImage(imageUrl, isGood, itemId) {
             fetch('/tag', {
                 method: 'POST',
                 headers: {
@@ -141,8 +153,42 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    // Reload the page to update the UI
-                    window.location.reload();
+                    // Update UI without page reload
+                    const item = document.getElementById(itemId);
+                    if (isGood) {
+                        item.classList.add('tagged-good');
+                        // Add or update tag status
+                        let tagStatus = item.querySelector('.tag-status');
+                        if (!tagStatus) {
+                            tagStatus = document.createElement('div');
+                            tagStatus.className = 'tag-status';
+                            item.appendChild(tagStatus);
+                        }
+                        tagStatus.textContent = 'Good';
+                    } else {
+                        item.classList.remove('tagged-good');
+                        const tagStatus = item.querySelector('.tag-status');
+                        if (tagStatus) {
+                            tagStatus.remove();
+                        }
+                    }
+                }
+            });
+        }
+
+        function saveTags() {
+            fetch('/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Tags saved successfully!');
+                } else {
+                    alert('No changes to save');
                 }
             });
         }
