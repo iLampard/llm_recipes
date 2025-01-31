@@ -1,0 +1,16 @@
+config_cls_name: llm_config
+task: llm_gen # currently not used
+
+model:
+  model_name: qwen_vl
+  use_api: false
+  model_dir: /workspaces/data0/shoppal/siqiao/models--qwen2.5-vl-72b-instruct
+  use_vllm: false
+  tensor_parallel_size: 4
+
+generation:
+  temperature: 0.3
+  top_p: 0.9
+  repetition_penalty: 1.1
+
+
