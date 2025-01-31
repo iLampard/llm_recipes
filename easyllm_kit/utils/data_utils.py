@@ -13,6 +13,7 @@ from io import BytesIO
 from typing import Union, List, Dict, Any, Optional
 from omegaconf import OmegaConf
 from datasets import load_dataset
+import numpy as np
 
 
 def ensure_dir(path: str, is_file=True):
@@ -63,6 +64,7 @@ def read_image_as_bytes(image_path, target_size=(448, 448)):
     """
     try:
         # Read image
+        print(image_path)
         if isinstance(image_path, str):
             image = Image.open(image_path)
         elif hasattr(image_path, 'read'):
@@ -130,8 +132,12 @@ def convert_to_dict(obj: Any, seen: set = None) -> Any:
         }
     elif isinstance(obj, (int, float, str, bool, type(None))):
         return obj
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()  # Convert numpy arrays to lists
+    elif isinstance(obj, np.generic):
+        return obj.item()  # Convert numpy scalar types to native Python types
     else:
-        return str(obj)
+        return str(obj)  # Fallback for other non-serializable types
 
 
 def convert_for_tensorboard(obj: Any) -> dict:
@@ -331,7 +337,7 @@ def extract_json_from_text(text: str):
     except (json.JSONDecodeError, ValueError) as e:
         print(f"Error parsing JSON: {e}")
         print(text)
-        return {'intention': 'error parsing'}
+        return {'result': 'error parsing'}
 
 
 def download_data_from_hf(

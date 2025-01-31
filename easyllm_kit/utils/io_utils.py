@@ -18,11 +18,12 @@ def initialize_database(output_db: str):
     return db
 
 
-def write_to_database(output_db: str, record_idx: str, results: dict):
+def write_to_database(output_db: str, record_idx: str, results: dict, verbose: bool=True):
     """
     Write the results to the database for a given question ID.
     """
     with DDB.at(output_db).session() as (sess, obj):
         obj[record_idx] = results
         sess.write()
-        logger.info(f"Stored answer for record_idx {record_idx}.")
+        if verbose:
+            logger.info(f"Stored answer for record_idx {record_idx}.")

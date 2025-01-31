@@ -38,5 +38,5 @@ __all__ = [
     'measure_time',
     'convert_str_2_list_or_float',
     'PromptTemplate',
-    'convert_to_dict'
+    'convert_to_dict',
 ]
