@@ -1,7 +1,5 @@
 from typing import Union, List, Dict
 from easyllm_kit.models.base import LLM
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
-from qwen_vl_utils import process_vision_info
 from easyllm_kit.utils import get_logger
 import base64
 from PIL import Image
@@ -24,7 +22,18 @@ class QwenVL(LLM):
         self.generation_config = config['generation_config']
         self.model = None
         self.processor = None
-        self.load_model()
+
+        if self.model_config.use_api:
+            # ref: https://bailian.console.aliyun.com/?spm=a2c4g.11186623.0.0.10c55a02btl2GS#/model-market/detail/qwen2.5-vl-7b-instruct?tabKey=sdk
+            import openai
+            self.client = openai.OpenAI(
+                api_key=self.model_config.api_key,
+                base_url=self.model_config.api_url  # "https://dashscope.aliyuncs.com/compatible-mode/v1"
+            )
+        else:
+            from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
+            from qwen_vl_utils import process_vision_info
+            self.load_model()
 
     def load_model(self):
         """Load the model and processor."""
@@ -62,8 +71,8 @@ class QwenVL(LLM):
                     image_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
                     image = f"data:image;base64,{image_base64}"
                 message["content"].append({
-                    "type": "image",
-                    "image": image  # Use the image URL or base64 string
+                    "type": "image_url",
+                    "image_url": image  # Use the image URL or base64 string
                 })
 
             # Add text
@@ -89,9 +98,6 @@ class QwenVL(LLM):
         Returns:
             Union[str, List[str]]: Generated text(s)
         """
-        if self.model is None:
-            raise RuntimeError("Model has not been loaded. Please check the initialization.")
-
         # Ensure prompts is a list
         if isinstance(prompts, str):
             prompts = [prompts]
@@ -102,37 +108,51 @@ class QwenVL(LLM):
         # Prepare batch inputs
         batch_messages = self.prepare_inputs(prompts, images)
 
-        # Prepare texts for batch inference
-        texts = [
-            self.processor.apply_chat_template(msg, tokenize=False, add_generation_prompt=True)
-            for msg in batch_messages
-        ]
+        if self.model_config.use_api:
+            completion = self.client.chat.completions.create(
+                model=self.model_config.model_full_name,
+                max_tokens=self.generation_config.max_length,
+                temperature=self.generation_config.temperature,
+                top_p=self.generation_config.top_p,
+                messages=batch_messages
+            )
+            return completion.model_dump_json()
+        else:
+            if self.model is None:
+                raise RuntimeError("Model has not been loaded. Please check the initialization.")
 
-        # Process vision information
-        image_inputs, video_inputs = process_vision_info(batch_messages)
 
-        # Prepare inputs using the processor
-        inputs = self.processor(
-            text=texts,
-            images=image_inputs,
-            videos=video_inputs,
-            padding=True,
-            return_tensors="pt"
-        ).to(self.model.device)
+            # Prepare texts for batch inference
+            texts = [
+                self.processor.apply_chat_template(msg, tokenize=False, add_generation_prompt=True)
+                for msg in batch_messages
+            ]
 
-        # Batch Inference
-        generated_ids = self.model.generate(**inputs, max_new_tokens=self.generation_config.max_new_tokens)
-        generated_ids_trimmed = [
-            out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-        ]
+            # Process vision information
+            image_inputs, video_inputs = process_vision_info(batch_messages)
 
-        # Decode outputs
-        output_texts = self.processor.batch_decode(
-            generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-        )
+            # Prepare inputs using the processor
+            inputs = self.processor(
+                text=texts,
+                images=image_inputs,
+                videos=video_inputs,
+                padding=True,
+                return_tensors="pt"
+            ).to(self.model.device)
 
-        # Return single string if input was single string
-        return output_texts[0] if len(output_texts) == 1 else output_texts
+            # Batch Inference
+            generated_ids = self.model.generate(**inputs, max_new_tokens=self.generation_config.max_new_tokens)
+            generated_ids_trimmed = [
+                out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+            ]
+
+            # Decode outputs
+            output_texts = self.processor.batch_decode(
+                generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+            )
+
+            # Return single string if input was single string
+            return output_texts[0] if len(output_texts) == 1 else output_texts
 
     def _process_images(self, image_dir, image_format):
         """Helper function to process images."""

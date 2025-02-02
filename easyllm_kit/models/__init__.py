@@ -9,6 +9,7 @@ from easyllm_kit.models.cpm import MiniCPM
 from easyllm_kit.models.gemini import Gemini
 from easyllm_kit.models.flan import FlanT5
 from easyllm_kit.models.gemma import Gemma2
+from easyllm_kit.models.qwen_vl import QwenVL
 
 __all__ = ['LLM',
            'GPT4o',
@@ -20,4 +21,5 @@ __all__ = ['LLM',
            'MiniCPM',
            'Gemini',
            'FlanT5',
-           'Gemma2']
+           'Gemma2',
+           'QwenVL']

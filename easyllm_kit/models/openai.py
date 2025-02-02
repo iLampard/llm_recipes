@@ -14,8 +14,10 @@ class GPT4o(LLM):
             self.client = openai.OpenAI(
                 api_key=self.model_config.api_key, base_url=self.model_config.api_url
             )
+            self.model_config.model_full_name = 'gpt-4o'
         else:
             self.client = openai.OpenAI(api_key=self.model_config.api_key)
+            self.model_config.model_full_name = 'gpt-4o'
 
     def generate(self, prompt: str, **kwargs):
         use_default_image_template = kwargs.get('use_default_image_template', False)
@@ -24,7 +26,7 @@ class GPT4o(LLM):
         else:
             prompt_ = prompt
         completion = self.client.chat.completions.create(
-            model=kwargs.get("model_name", "gpt-4o"),
+            model=self.model_config.model_full_name,
             max_tokens=self.generation_config.max_length,
             temperature=self.generation_config.temperature,
             top_p=self.generation_config.top_p,

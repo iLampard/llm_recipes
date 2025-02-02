@@ -1,3 +1,6 @@
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from easyllm_kit.models import LLM
 from easyllm_kit.configs import Config
 import argparse
@@ -5,7 +8,7 @@ import argparse
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load various LLMs and generate answers")
     parser.add_argument("--config_dir",
-                        default='cpm_gen.yaml',
+                        default='qwen_model_gen.yaml',
                         help="Path to configuration file in yaml format")
     parser.add_argument("--output_dir", help="Path to save the output JSON file")
     args = parser.parse_args()

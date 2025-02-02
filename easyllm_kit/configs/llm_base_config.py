@@ -137,6 +137,8 @@ class ModelArguments(QuantizationArguments, ProcessorArguments, ExportArguments,
 
     model_name: str = field(default='llama3')
 
+    model_full_name: str = field(default='')
+
     # Optional fields (with default values)
     use_api: bool = field(default=False,
                           metadata={'help': 'Flag to indicate if the model should be accessed via an API.'})
