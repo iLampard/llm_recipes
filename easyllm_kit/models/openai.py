@@ -14,10 +14,8 @@ class GPT4o(LLM):
             self.client = openai.OpenAI(
                 api_key=self.model_config.api_key, base_url=self.model_config.api_url
             )
-            self.model_config.model_full_name = 'gpt-4o'
         else:
             self.client = openai.OpenAI(api_key=self.model_config.api_key)
-            self.model_config.model_full_name = 'gpt-4o'
 
     def generate(self, prompt: str, **kwargs):
         use_default_image_template = kwargs.get('use_default_image_template', False)

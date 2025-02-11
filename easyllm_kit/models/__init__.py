@@ -10,6 +10,7 @@ from easyllm_kit.models.gemini import Gemini
 from easyllm_kit.models.flan import FlanT5
 from easyllm_kit.models.gemma import Gemma2
 from easyllm_kit.models.qwen_vl import QwenVL
+from easyllm_kit.models.deepseek import DeepSeek
 
 __all__ = ['LLM',
            'GPT4o',
@@ -22,4 +23,5 @@ __all__ = ['LLM',
            'Gemini',
            'FlanT5',
            'Gemma2',
-           'QwenVL']
+           'QwenVL',
+           'DeepSeek']

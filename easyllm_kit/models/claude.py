@@ -21,7 +21,6 @@ class Claude35Sonnet(LLM):
                 self.model_config.model_full_name = 'claude-3-5-sonnet-20240620'
 
     def generate(self, prompt: str, **kwargs):
-
         completion = self.client.chat.completions.create(
                 model=self.model_config.model_full_name,
                 max_tokens=self.generation_config.max_length,
