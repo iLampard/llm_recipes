@@ -14,4 +14,4 @@ if __name__ == "__main__":
 
     model = LLM.build_from_config(config)
 
-    print(model.generate('whats the content of the image?', image='cloth.png'))
+    print(model.generate('outfit for office under 200$'))
