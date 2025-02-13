@@ -70,6 +70,8 @@ class QwenVL(LLM):
                     image.save(buffered, format="JPEG")
                     image_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
                     image = f"data:image;base64,{image_base64}"
+                else:
+                    image = f"data:image;base64,{image}"
                 message["content"].append({
                     "type": "image_url",
                     "image_url": image  # Use the image URL or base64 string

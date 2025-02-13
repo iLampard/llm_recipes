@@ -1,3 +1,4 @@
+import base64
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -24,3 +25,8 @@ if __name__ == "__main__":
     image_dir = 'cloth.png'
 
     print(model.generate(prompt, image_dir=image_dir, image_format='png'))
+
+    with open(image_dir, 'rb') as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+    print(model.generate(prompt, image_dir=encoded_string, image_format='base64'))
+
