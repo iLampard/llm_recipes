@@ -7,8 +7,8 @@ datasets
 pyyaml
 openai
 numpy
-rouge_score
 colorama
+json-repair
 # Install this dependency without dependencies manually:
 # pip install dictdatabase --no-deps
 # Optional dependencies:

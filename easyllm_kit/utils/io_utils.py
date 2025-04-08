@@ -4,6 +4,12 @@ from easyllm_kit.utils.log_utils import get_logger
 logger = get_logger('easyllm_kit')
 
 
+def setup_ddb_dir(parent_dir: str):
+    DDB.config.storage_directory = parent_dir # Default value
+    logger.info(f"DDB storage directory set to: {parent_dir}")
+    return 
+
+
 def initialize_database(output_db: str):
     """
     Initialize the database if it doesn't exist and return the database object.

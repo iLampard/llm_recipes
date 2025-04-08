@@ -22,12 +22,13 @@ class Claude35Sonnet(LLM):
 
     def generate(self, prompt: str, **kwargs):
         completion = self.client.chat.completions.create(
-                model=self.model_config.model_full_name,
-                max_tokens=self.generation_config.max_length,
-                temperature=self.generation_config.temperature,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
-            )
-        
+            model=self.model_config.model_full_name,
+            max_tokens=self.generation_config.max_length,
+            temperature=self.generation_config.temperature,
+            timeout=self.generation_config.timeout,
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+
         return completion.choices[0].message.content

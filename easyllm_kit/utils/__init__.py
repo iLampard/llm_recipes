@@ -14,7 +14,8 @@ from easyllm_kit.utils.data_utils import (
     extract_json_from_text,
     read_image_as_bytes,
     convert_to_dict,
-    convert_for_tensorboard
+    convert_for_tensorboard,
+    format_prompt_with_image
 )
 from easyllm_kit.utils.hf_utils import HFHelper
 from easyllm_kit.utils.config_utils import make_json_compatible_value, convert_str_2_list_or_float, measure_time
@@ -39,4 +40,5 @@ __all__ = [
     'convert_str_2_list_or_float',
     'PromptTemplate',
     'convert_to_dict',
+    'format_prompt_with_image'
 ]

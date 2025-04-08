@@ -14,6 +14,7 @@ from typing import Union, List, Dict, Any, Optional
 from omegaconf import OmegaConf
 from datasets import load_dataset
 import numpy as np
+import json_repair
 
 
 def ensure_dir(path: str, is_file=True):
@@ -86,6 +87,28 @@ def read_image_as_bytes(image_path, target_size=(448, 448)):
 
     except Exception as e:
         raise ValueError(f"Error processing image: {str(e)}")
+
+
+def format_prompt_with_image(prompt: str, image=None):
+    """Format prompt with optional image for LiteLLM compatible APIs."""
+
+    prompt_ = [
+        {
+            "type": "text",
+            "text": prompt,
+        }
+    ]
+
+    if image:
+        image_base64 = base64.b64encode(read_image_as_bytes(image)).decode("utf-8")
+        prompt_.append(
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"},
+            }
+        )
+
+    return prompt_
 
 
 def convert_to_dict(obj: Any, seen: set = None) -> Any:
@@ -332,7 +355,7 @@ def extract_json_from_text(text: str):
         json_str = re.sub(r'[\x00-\x1F\x7F]', '', json_str)
 
         # Parse the JSON string to a dictionary
-        json_dict = json.loads(json_str)
+        json_dict = json_repair.loads(json_str)
         return json_dict
     except (json.JSONDecodeError, ValueError) as e:
         print(f"Error parsing JSON: {e}")

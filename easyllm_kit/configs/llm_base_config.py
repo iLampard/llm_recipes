@@ -422,6 +422,8 @@ class GenerationArguments:
         metadata={'help': 'Default system message to use in chat completion.'},
     )
 
+    timeout: Optional[int] = field(default=None, metadata={'help': 'Timeout for accessing the model if using an API.'})
+
     def to_dict(self) -> Dict[str, Any]:
         args = asdict(self)
         if args.get('max_new_tokens', None):
@@ -437,4 +439,5 @@ class LLMConfig(Config):
     def parse_from_yaml_config(config: dict, **kwargs):
         model_config = ModelArguments(**config.get('model', {}))
         generation_config = GenerationArguments(**config.get('generation', {}))
+        print(generation_config)
         return {'model_config': model_config, 'generation_config': generation_config}
