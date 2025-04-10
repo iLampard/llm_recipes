@@ -90,6 +90,15 @@ def read_image_as_bytes(image_path, target_size=(448, 448)):
 
 
 def format_prompt_with_image(prompt: str, image=None):
+    """Format prompt with optional image(s) for LiteLLM compatible APIs.
+    
+    Args:
+        prompt (str): The text prompt
+        image: Either a single image path/file-like object or a list of image paths/file-like objects
+        
+    Returns:
+        list: Formatted prompt with text and optional image(s)
+    """
     """Format prompt with optional image for LiteLLM compatible APIs."""
 
     prompt_ = [
@@ -100,13 +109,26 @@ def format_prompt_with_image(prompt: str, image=None):
     ]
 
     if image:
-        image_base64 = base64.b64encode(read_image_as_bytes(image)).decode("utf-8")
-        prompt_.append(
-            {
-                "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"},
-            }
-        )
+        # Handle both single image and list of images
+        if isinstance(image, list):
+            # Process multiple images
+            for img in image:
+                image_base64 = base64.b64encode(read_image_as_bytes(img)).decode("utf-8")
+                prompt_.append(
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"},
+                    }
+                )
+        else:
+            # Process single image
+            image_base64 = base64.b64encode(read_image_as_bytes(image)).decode("utf-8")
+            prompt_.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"},
+                }
+            )
 
     return prompt_
 

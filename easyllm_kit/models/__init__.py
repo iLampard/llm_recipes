@@ -9,6 +9,7 @@ from easyllm_kit.models.cpm import MiniCPM
 from easyllm_kit.models.gemini import Gemini
 from easyllm_kit.models.flan import FlanT5
 from easyllm_kit.models.gemma import Gemma2
+from easyllm_kit.models.gemma3 import Gemma3
 from easyllm_kit.models.qwen_vl import QwenVL
 from easyllm_kit.models.deepseek import DeepSeek
 
@@ -23,5 +24,6 @@ __all__ = ['LLM',
            'Gemini',
            'FlanT5',
            'Gemma2',
+           'Gemma3',
            'QwenVL',
            'DeepSeek']

@@ -48,13 +48,20 @@ setup(
     name='easyllm_kit',
     version=get_version(),
     description='An easy recipes of code for large language model',
-    url = 'https://github.com/iLampard/llm_recipes',
-    long_description = 'A collection of useful recipes for large language model, such as logging, inspection utilities',
+    long_description=readme(),
+    long_description_content_type='text/markdown',
+    url='https://github.com/iLampard/llm_recipes',
     author='iLampard',
+    license='Apache License 2.0',
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     include_package_data=True,
     classifiers=[
-        'Programming Language :: Python :: 3.8', 'Programming Language :: Python :: 3.9',
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: Apache Software License',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10'
     ],
+    python_requires='>=3.8',
     install_requires=parse_requirements('requirements.txt'))
