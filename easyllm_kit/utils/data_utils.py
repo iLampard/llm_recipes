@@ -55,11 +55,11 @@ def process_base64_image(base64_string, output_path, save_format='PNG'):
 
 def read_image_as_bytes(image_path, target_size=(448, 448)):
     """Read and preprocess image file and return bytes.
-    
+
     Args:
         image_path (str): Path to the image file
         target_size (tuple): Target size for the image (height, width)
-        
+
     Returns:
         bytes: Preprocessed image as bytes
     """
@@ -91,11 +91,11 @@ def read_image_as_bytes(image_path, target_size=(448, 448)):
 
 def format_prompt_with_image(prompt: str, image=None):
     """Format prompt with optional image(s) for LiteLLM compatible APIs.
-    
+
     Args:
         prompt (str): The text prompt
         image: Either a single image path/file-like object or a list of image paths/file-like objects
-        
+
     Returns:
         list: Formatted prompt with text and optional image(s)
     """
@@ -116,8 +116,8 @@ def format_prompt_with_image(prompt: str, image=None):
                 image_base64 = base64.b64encode(read_image_as_bytes(img)).decode("utf-8")
                 prompt_.append(
                     {
-                        "type": "image_url",
-                        "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"},
+                        "type": "image",
+                        "image": f"data:image/jpeg;base64,{image_base64}",
                     }
                 )
         else:
@@ -125,8 +125,8 @@ def format_prompt_with_image(prompt: str, image=None):
             image_base64 = base64.b64encode(read_image_as_bytes(image)).decode("utf-8")
             prompt_.append(
                 {
-                    "type": "image_url",
-                    "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"},
+                    "type": "image",
+                    "image": f"data:image/jpeg;base64,{image_base64}",
                 }
             )
 
