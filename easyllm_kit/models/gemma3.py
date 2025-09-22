@@ -1,7 +1,6 @@
-from PIL import Image
 from transformers import BitsAndBytesConfig, AutoProcessor, Gemma3ForConditionalGeneration, Gemma3ForCausalLM, \
     AutoTokenizer
-from typing import Union, List, Dict, Any, Optional
+from typing import Union, List
 from easyllm_kit.models.base import LLM
 from easyllm_kit.utils import get_logger, format_prompt_with_image
 import torch

@@ -12,6 +12,7 @@ from easyllm_kit.models.gemma import Gemma2
 from easyllm_kit.models.gemma3 import Gemma3
 from easyllm_kit.models.qwen_vl import QwenVL
 from easyllm_kit.models.deepseek import DeepSeek
+from easyllm_kit.models.phi4 import Phi4
 
 __all__ = ['LLM',
            'GPT4o',
@@ -26,4 +27,5 @@ __all__ = ['LLM',
            'Gemma2',
            'Gemma3',
            'QwenVL',
-           'DeepSeek']
+           'DeepSeek',
+           'Phi4']
